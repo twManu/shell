@@ -1,0 +1,14 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+#
+# put this file in $HOME and have xterm run following custom command
+# /bin/bash -rcfile ~/.rc_c875
+
+source /home/manu/.bashrc
+
+export RTE_SDK=/home/manu/Downloads/dpdk-2.1.0
+export RTE_TARGET="x86_64-native-linuxapp-gcc"
+
+#
+#
+#
