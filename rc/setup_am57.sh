@@ -2,7 +2,7 @@
 
 #for host
 #
-#sudo atp-get install xfce4 xfce4-terminal virt-manager libvirt-bin qemu-system qumu-kvm linux-image-extra-virtual minicom
+#sudo apt-get install xfce4 xfce4-terminal virt-manager libvirt-bin qemu-system qemu-kvm linux-image-extra-virtual minicom
 #sudo echo 'auto eth0' >>/etc/network/interfaces
 #sudo echo 'iface eth0 inet manual' >>/etc/network/interfaces
 #sudo echo 'auto br0' >>/etc/network/interfaces
