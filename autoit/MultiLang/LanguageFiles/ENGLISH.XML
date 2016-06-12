@@ -1,0 +1,13 @@
+<main_gui>Test GUI</main_gui>
+<mnu_file>File</mnu_file>
+<mnu_file_exit>Exit</mnu_file_exit>
+<pic1tip>This is a picture I took while fishing</pic1tip>
+<grp_random>Random Controls</grp_random>
+<combo>Different|Entries|In|Combo</combo>
+<chkbox>Check this control</chkbox>
+<radio1>First Option</radio1>
+<radio2>Second Option</radio2>
+<radio3>Third Option</radio3>
+<list>From|Top|To|Bottom</list>
+<edit1>This is a long sentance about some different things.  Really really long.  Actually it is now a paragraph.@CRLF@CRLFEven has line breaks...</edit1>
+<edit2>I felt like using up more space, so here it is.</edit2>

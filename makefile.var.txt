@@ -1,0 +1,180 @@
+# -------------------- overridden -------------
+# CFLAG=-g
+#
+# may be overridden by
+#	make CFLAG="-Wall -O"
+#
+
+CFLAGS := -O2 -g -DIF_DEBUG
+
+#
+# test 1: abc.c de.cpp fg.h => abc.c de.cpp
+# 	C_IN_DEP = $(filter %.c %.cc %.cpp %.cxx,$^)
+# 	heapAlloc: heapAlloc.cc ../XSTUNT/Client.h ../XSTUNT/xecho.cpp
+#		@echo manutest $(C_IN_DEP)
+# gets
+#	manutest heapAlloc.cc ../XSTUNT/xecho.cpp
+#
+
+#
+# test 2: filter full path or part of string
+#	TEST = $(filter Client.%,aClient.cpp ../Client.cpp)
+# 	all:
+#		@echo manutest $(TEST)
+#
+# gets
+#	manutest
+# NOTE: nor does $Client.% works
+#
+
+#
+# Each word ($n) in the list ($2), supposedly in format PATH/FNAME.EXT, will be in turn
+# and evaluated in 3rd part foreach expression. The foreach expression makes sure FNAME.c
+# or FNAME.cpp or FNAME.c, or FNAME.cc matches $1 which is expected w/o extension, in FNAME
+# i.e. basename FNAME.cpp .cpp == FNAME ==S1
+# So dir/abc.c and air/abca.c in list wont be matched simultaneously...grep is hard to achieve that however
+#
+# $1 - word w/o extension
+# $2 - list
+#
+define GET_CWORD_IN_LIST
+$(foreach n,$2,\
+	$(shell test `basename $n .cc` = $1\
+			|| test `basename $n .c` = $1\
+			|| test `basename $n .cpp` = $1\
+			|| test `basename $n .cxx` = $1\
+	 && echo $n)\
+)
+
+
+#
+# Feed abc of abc.cc as workEach word ($1) in the list ($2) will be $n in turn and evaluate in 3rd part expression.
+# i.e. for each word we do grep and concatnate the result
+# NOTE: there is \$ in the end of grep to escape $ for grep. so dir/abc.c and air/abc.cc wont match simultaneously
+# $1 - word
+# $2 - list
+#
+define COMMAND_COMPILE_C
+g++ -c $(CFLAGS) -o $@ $(call GET_CWORD_IN_LIST,$(basename $@),$(C_IN_DEP))
+endef
+
+#ok define COMPILE_C
+#ok g++ -c $(CFLAGS) -o $@ $(foreach n,$(C_IN_DEP),$(shell echo $n | grep $(basename $@)))
+#ok endef
+
+#all: Client.o
+
+#Client.o : heapAlloc.cc ../XSTUNT/Client.h ../XSTUNT/xecho.cpp ../XSTUNT/Client.cpp
+#	@echo manutest $(TEST)
+#	$(COMPILE_C)
+
+all: heapAlloc.o
+heapAlloc.o : ../XSTUNT/Client.h ../XSTUNT/xecho.cpp ../XSTUNT/heapAlloc.cc
+	$(COMPILE_C)
+
+clean:
+	rm -rf heapAlloc *.o
+
+
+# ----------------- recursively-expanded ------
+#     Variables are _NOT_ expanded when `make' processes the definition 
+# of variable.
+#
+
+# -------------- simply expanded variables ----
+#     Variables are scanned once and for all, expanding any references
+# to other variables and functions, when the variable is _DEFINED_.
+#
+
+# -------------------- append -----------------
+# (1) 
+#     variable += value
+#
+#	is equivalent to
+#
+#     variable = value
+#
+#       if variable is _NEVER_ defined
+#
+# (2) 
+#     variable := value
+#     variable += more
+#
+#	is exactly equivalent to:
+#
+#     variable := value
+#     variable := $(variable) more
+#
+# (3) 
+#     variable = value
+#     variable += more
+#
+#	is roughly equivalent to:
+#
+#     temp = value
+#     variable = $(temp) more
+#
+#	except that temp is never defined
+#
+
+# ------------------ conditional -------------
+#
+#     FOO ?= bar
+#
+#	is exactly equivalent to:
+#
+#     ifeq ($(origin FOO), undefined)
+#         FOO = bar
+#     endif
+#
+
+variable1 := old1
+variable2 := ${variable1} a2	#expand once and for all
+variable1 := new1
+
+variable3 = old3
+variable4 = ${variable3} a4
+variable3 = new3
+
+variable5 ?= old5		#assign iff never done
+variable5 ?= new5
+
+variable6 = a6
+variable6 += append6 
+
+v7 = a.o b.o c.o
+variable7 = ${v7:%.o=%.c}		#substitution
+
+prerequisites = var1 var2 var3 var4 var5 var6 var7 var8
+
+.PHONY: test.o
+
+test.o: ${prerequisites}
+	@echo variable8 = ${variable8}
+	@echo target name = $@		#automatic variables
+	@echo target name without suffix = $*
+	@echo 1st prerequsite = $<
+	@echo all prereuisites = $^
+	@echo newer prereuisites than target = $?
+
+var%:					#match var1, var2 if not PHONY targets
+	@echo variable$* = ${variable$*}
+
+var8: variable8 = static-target-var
+
+# answer
+#	variable1 = new1
+#	variable2 = old1 a2
+#	variable3 = new3
+#	variable4 = new3 a4
+#	variable5 = old5
+#	variable6 = a6 append6
+#	variable7 = a.c b.c c.c
+#	variable8 = static-target-var
+#	variable8 =
+#	target name = test.o
+#	target name without suffix = test
+#	1st prerequsite = var1
+#	all prereuisites = var1 var2 var3 var4 var5 var6 var7
+#	newer prereuisites than target = var1 var2 var3 var4 var5 var6 var7
+

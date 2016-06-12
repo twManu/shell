@@ -1,0 +1,10 @@
+/***** schedule a command 1 minute later *****/
+$ at now +1 min
+> /root/p2p/xstunt/XSTUNTServer 140.113.215.231 140.113.215.232
+> [CTRL-D]
+
+/***** schedule a command with file 1 minute later *****/
+$ at -f /root/p2p/xstunt/start.sh now +1 min
+
+$ cat start.sh
+    /root/p2p/xstunt/XSTUNTServer 140.113.215.231 140.113.215.232

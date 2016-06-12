@@ -1,0 +1,403 @@
+#
+# 
+# $Id: Makefile_pvr.txt,v 1.1 2011/08/22 02:40:31 manuchen Exp $
+#
+# Copyright (c) 1999 Dynarc AB
+#
+ROOT=target-root
+SUBDIRS=telnetd telnet mrouted xntp target-root
+INSTALL=install
+.ifndef VNDIMAGE
+VNDIMAGE!=echo /tmp/img.$$$$
+.endif
+.ifndef VNDDIR
+VNDDIR!=echo /tmp/mnt.$$$$
+.endif
+VNDDEV	?= vnd0
+CVS?=	cvs
+.ifndef CVS_EXPORT
+CVS_EXPORT=checkout
+.endif
+# set SMALLDISK to be able to use old 30M flash
+.ifndef SMALLDISK
+DISKSIZE=62913
+DISKLABEL_FILE=flash.label
+.else
+DISKSIZE=58000
+DISKLABEL_FILE=flash.label-30
+.endif
+#
+# These variables should be passed to the make that
+# is ran with root privs
+#
+FLASHVARS=	VNDIMAGE=${VNDIMAGE} VNDDIR=${VNDDIR}
+
+# Tag numbers for Dynaswitch current
+# Never EVER use -r HEAD for current The "branch" current is
+# represented by the absence of a tag.
+
+IMAGETAG          = R2_2_branch
+KERNELTAG         = -r R2_5_branch
+DTMAPPS_TAG       = -r R2_2_branch
+GATEDTAG          = # -r R2_0_2
+
+#
+# Ok, for export we need a tag, but not for checkout. Therefore if we
+# export and there is no tag, replace with "-r HEAD"
+#
+.if $(CVS_EXPORT) == "export"
+.if $(KERNELTAG) == ""
+KERNELTAG=-r HEAD
+.endif
+.if $(DTMAPPS_TAG) == ""
+DTMAPPS_TAG=-r HEAD
+.endif
+.if $(GATEDTAG) == ""
+GATEDTAG=-r HEAD
+.endif
+.endif
+
+# GateD repository name
+GATED_REPOSITORY  = gated-um-9.0b5
+
+# Crypto gunk to avoid export problems.
+SSH	   ?= no
+
+OPENSSL    ?= no
+VERSION	   ?= international
+.if $(VERSION) == "eu"
+SSH=yes
+OPENSSL=yes
+.elif $(VERSION) == "international"
+SSH=no
+OPENSSL=no
+.endif
+
+#
+FLASHDEBUG ?= no
+
+.if ${FLASHDEBUG} == "yes"
+KERNEL_NAME?=		DYNARC-PRODUCT-DEBUG
+MK_DTM_APPDEBUG=	--enable-sci_debug
+.else
+KERNEL_NAME?=		DYNARC-PRODUCT
+MK_DTM_APPDEBUG=	--disable-sci_debug
+.endif
+
+
+# Directories that will be created.
+installdirs	= $(ROOT)/sci $(ROOT)/sci/lib $(ROOT)/sci/etc $(ROOT)/sci/sbin $(ROOT)/sci/libexec $(ROOT)/sci/config $(ROOT)/etc $(ROOT)/proc $(ROOT)/dev $(INSTALL) $(INSTALL)/include $(INSTALL)/include/net $(INSTALL)/lib $(ROOT)/usr $(ROOT)/usr/lib
+
+
+# This probably only works in GNUmake, but hey, that's the one we're using.
+DYNASWITCH_IMAGE := $(shell echo /tmp/DYNASWITCH_IMAGE_$$$$)
+
+all:	development
+
+update:
+	$(CVS) update -dP $(DTMAPPS_TAG) dtm_applications
+	$(CVS) update -dP $(GATEDTAG) gated
+
+dtm_applications:
+	$(CVS) $(CVS_EXPORT) -d $@ $(DTMAPPS_TAG) dtm_applications
+
+openssl: 
+.if (${OPENSSL} == "yes")
+	$(CVS) co openssl;cd openssl/openssl-0.9.5a;./config --prefix=`pwd`/../../install
+.endif
+
+gated:
+	$(CVS) $(CVS_EXPORT) -d $@ $(GATEDTAG) $(GATED_REPOSITORY) ;
+
+# Uncomment this if you build highlander
+kernel:
+	$(CVS) $(CVS_EXPORT) $(KERNELTAG) kernel;
+	(cd kernel/sys/; ln -s arch/i386/include machine)
+
+
+# Uncomment this if you build lowlander
+#kernel:
+#	$(CVS) $(CVS_EXPORT) $(KERNELTAG) netbsd;
+#	(mv netbsd/usr/src/ kernel; cd kernel/sys/; ln -s arch/i386/include machine)
+
+KERNEL_FN=kernel/sys/arch/i386/compile/${KERNEL_NAME}/netbsd
+
+core: dtm_applications openssl kernel Xtelnetd Xtelnet Xmrouted Xssh Xxntp Xprograms gated
+	if echo $(IMAGETAG) | grep -q '^R[0-9]_[0-9]_[0-9]$$' ; then \
+	  echo "DynarcOS: $(IMAGETAG)" > $(ROOT)/ds.version; \
+	else \
+	  echo "DynarcOS: $(IMAGETAG)  [Compiled `date` by `whoami`]" > $(ROOT)/ds.version ;\
+	fi; \
+	for i in $(installdirs); \
+	  do $(INSTALL) -d $$i; done
+#	(cd snmpsrc/ucd-snmp-4.1.1;autoconf;autoheader;./configure --with-sysincludedir="../../../../kernel/sys" --with-dtmincludedir="../../../../install/include/" --with-dtmlibdir="../../../install/lib" --with-mib-modules="../../../dynarc/src/dtm ../../../dynarc/src/dtm_filter ../../../dynarc/src/dtm_alarm_filter ../../../dynarc/src/dtm_mdr ../../../bridge/src/bridge" --with-mibs="DYNARC-DTM-NIC-MIB:SNMPv2-SMI:SNMPv2-TC:SNMPv2-MIB:SNMPv2-MIB:RFC1213-MIB:UCD-SNMP-MIB:BRIDGE-MIB" --with-sys-contact="mattias@dynarc.se" --with-sys-location="Unknown" --with-logfile="/tmp/snmpd.log" --with-persistent-directory="/var/ucd-snmp" --with-openssl=`pwd`/../../install --with-datadir="/tmp";make snmp_lib);
+	(cd dtm_applications; autoconf; autoheader; ./configure --prefix=`pwd`/../$(ROOT)/sci --with-sysincludedir=`pwd`/../kernel/sys --enable-dynarc_product --enable-xntp $(MK_DTM_APPDEBUG); make product)
+	cp dtm_applications/lib/*/lib*.a $(INSTALL)/lib/ ;
+	cp dtm_applications/lib/dr/libdr.so.0.0 $(ROOT)/usr/lib/ ;
+	cp dtm_applications/include/drlib.h $(INSTALL)/include/ ;
+	cp dtm_applications/include/kvm_include.h $(INSTALL)/include/ ;
+.if (${OPENSSL} == "yes")
+	cd openssl/openssl-0.9.5a; make; make install;        
+.endif
+#	(cd snmpsrc; make snmp-dynaswitch) ;
+	(cd gated ; ./configure --with-rtbit-size=6 --with-cflags="-I`pwd`/../kernel/sys/ -I`pwd`/../kernel/sys/dynarc/netbsd/ -O2 -g" --enable-extended; make depend all ; strip src/gated/gated)
+	cp dtm_applications/snmp2/deliver/netbsd/agent/snmpd $(ROOT)/sci/libexec/ ;
+	cp telnetd/telnetd $(ROOT)/sci/libexec ;
+	cp telnet/telnet $(ROOT)/sci/sbin ;
+	cp xntp/xntpd/xntpd $(ROOT)/sci/libexec ;
+	cp mrouted/mrouted $(ROOT)/sci/libexec ;
+	cp gated/src/gated/gated $(ROOT)/sci/libexec ;
+	cp ssh/sshd $(ROOT)/sci/libexec ;
+	cp ssh/ssh-keygen $(ROOT)/sci/sbin ;
+	cp etc/MAKEDEV $(ROOT)/dev
+	(cd dhcp ; make) ;
+	cp dhcp/dhcrelay $(ROOT)/sci/libexec ;
+	cp ssh/server_config.sample $(ROOT)/etc/sshd_config ;
+	mkdir -p $(ROOT)/sci/bin ;
+	cp programs/ifconfig/ifconfig $(ROOT)/sci/bin/ifconfig ;
+	cp programs/netstat/netstat $(ROOT)/sci/bin/netstat ;
+	cp programs/ping/ping $(ROOT)/sci/bin/ping ;
+	cp programs/route/route $(ROOT)/sci/bin/route ;
+	cp programs/traceroute/traceroute $(ROOT)/sci/bin/traceroute ;
+
+flash-core:core
+	cd kernel/sys/arch/i386/conf && config ${KERNEL_NAME}
+.if (${FLASHDEBUG} == "no")
+	if grep -q ^[^#].*DDB ${KERNEL_NAME}; then \
+		echo "Refusing to build a product kernel with DDB"; \
+		exit 1 ; \
+	fi
+.endif
+	cd kernel/sys/arch/i386/compile/${KERNEL_NAME} && \
+	/usr/bin/make depend && \
+	/usr/bin/make clean && \
+	/usr/bin/make
+	cd kernel/sys/arch/i386/stand && \
+	/usr/bin/make distclean && \
+	/usr/bin/make obj && \
+	/usr/bin/make
+	cp ${KERNEL_FN} $(ROOT)/netbsd
+	(test -f ${KERNEL_FN}.gdb && \
+		cp ${KERNEL_FN}.gdb $(ROOT)/netbsd.gdb) || true
+	cp `find etc -type f | grep -v CVS | grep -v MAKEDEV` $(ROOT)/etc
+.if (${FLASHDEBUG} =="yes")
+	($(CVS) co test ; cd test/apps ; make)
+	cp test/apps/drshd $(ROOT)/sci/libexec
+	if ! grep -q drshd $(ROOT)/etc/rc ; then \
+	  (echo /inetd ; echo a ; \
+	   echo "/sci/libexec/drshd &" ; echo . ; echo wq) \
+		| ed $(ROOT)/etc/rc ;\
+	fi
+.else
+	rm -f $(ROOT)/sci/libexec/drshd ;
+	if grep -q drshd $(ROOT)/etc/rc ; then \
+	  (echo /drshd ; echo d ; echo wq) | ed $(ROOT)/etc/rc ;\
+	fi ;
+.endif
+	rm -f $(ROOT)/ds.tar;
+	(cd $(ROOT) ; make ds.tar)
+	./mk-flash
+
+flash: flash-core flash-finish
+
+VND_LOCK=/tmp/vnd-lock-${VNDDEV}
+MAXLOCKTIMES?=10
+
+obtain-vnd-lock:
+	@LOCKPID=$$$$ ; \
+	TIMES=1 ; \
+	while true;  do \
+		mkdir /tmp/vnd-lock$$LOCKPID ; \
+		touch /tmp/vnd-lock$$LOCKPID/$$USER-$$LOCKPID ; \
+		mv /tmp/vnd-lock$$LOCKPID ${VND_LOCK} || echo bar; \
+		test -f ${VND_LOCK}/$$USER-$$LOCKPID && break || true ; \
+		rm -rf /tmp/vnd-lock$$LOCKPID ${VND_LOCK}/vnd-lock$$LOCKPID ;\
+		LH=unknown; \
+		for a in ${VND_LOCK}/*; do \
+			if [ -f $$a ]; then LH=`basename $$a`; fi ; \
+		done ; \
+		echo "$$TIMES: Waiting for lock $$LH" ; \
+		sleep 20 ; \
+		TIMES=`expr $$TIMES + 1` ; \
+		if test $$TIMES = ${MAXLOCKTIMES}; then \
+			rm -rf /tmp/vnd-lock$$LOCKPID ; \
+			exit 1; \
+		fi ; \
+	done
+	@echo Got lock
+
+flash-finish:
+	/usr/bin/make obtain-vnd-lock
+	sudo /usr/bin/make flash-root ${FLASHVARS} || \
+		sudo /usr/bin/make flash-error-cleanup ${FLASHVARS}
+	sudo /usr/bin/make flash-cleanup1 ${FLASHVARS} || \
+		sudo /usr/bin/make flash-error-cleanup ${FLASHVARS}
+	/usr/bin/make flash-after-root VNDIMAGE=${VNDIMAGE} || \
+		sudo /usr/bin/make flash-error-cleanup ${FLASHVARS}
+	sudo /usr/bin/make flash-cleanup2 VNDIMAGE=${VNDIMAGE}
+	rm -rf ${VND_LOCK}
+
+flash-root:
+	@echo If you are not root, this target will fail.
+	rm -rf ${VNDDIR}
+	mkdir ${VNDDIR}
+	dd if=/dev/zero of=${VNDIMAGE} bs=11264k count=1
+	vnconfig -c -v ${VNDDEV} ${VNDIMAGE}
+	disklabel -R -r ${VNDDEV} vnd.label
+	newfs ${VNDDEV}a
+	sync; sleep 5 ; sync
+	mount /dev/${VNDDEV}a ${VNDDIR}
+	cat $(ROOT)/flash.tar | (cd ${VNDDIR} ; tar -x -v --exclude netbsd -f -)
+	(cd ${VNDDIR}/dev ; sh MAKEDEV dynarc )
+	(cd ${VNDDIR} ; ln -s /bootfs/netbsd netbsd )
+
+flash-cleanup1:
+	umount ${VNDDIR}
+	sync
+	rm -rf ${VNDDIR}
+	vnconfig -u ${VNDDEV}
+
+flash-after-root:
+	cp $(ROOT)/netbsd $(ROOT)/netbsd.flash
+	mdsetimage -v $(ROOT)/netbsd.flash ${VNDIMAGE}
+	gzip -9 $(ROOT)/netbsd.flash
+	mv $(ROOT)/netbsd.flash.gz $(ROOT)/netbsd.flash
+
+flash-cleanup2:
+	rm -f ${VNDIMAGE}
+
+flash-error-cleanup:
+	@echo "ERROR WHILE BUILDING FLASH CLEANING UP"
+	umount ${VNDDIR} || true
+	vnconfig -u ${VNDDEV} || true
+	rm -f ${VNDIMAGE}
+	rm -rf ${VNDDIR}
+	rm -rf ${VND_LOCK}
+	@test -f ${VNDIMAGE} && echo '***' Wow, ${VNDIMAGE} still there
+	exit 1
+
+.ifndef FLASHDEV
+flash-prepare:
+	@echo "You must set FLASHDEV first."
+.else
+flash-prepare:
+#clean the partition table.
+	fdisk -i -f -0 ${FLASHDEV}
+	fdisk -u -f -0 -s 0/0/0 ${FLASHDEV}
+	fdisk -u -f -1 -s 0/0/0 ${FLASHDEV}
+	fdisk -u -f -2 -s 0/0/0 ${FLASHDEV}
+	fdisk -u -f -3 -s 0/0/0 ${FLASHDEV}
+#init the partition table.
+	fdisk -u -f -0 -s 169/63/${DISKSIZE} ${FLASHDEV}
+	fdisk -0 -f -a ${FLASHDEV}
+	disklabel -R -r ${FLASHDEV} ${DISKLABEL_FILE}
+	newfs ${FLASHDEV}a
+	newfs ${FLASHDEV}e
+	kernel/sys/arch/i386/stand/installboot/obj/installboot kernel/sys/arch/i386/stand/biosboot/obj/biosboot.sym /dev/r${FLASHDEV}a
+	mkdir ${VNDDIR}
+	mount -o async /dev/${FLASHDEV}e ${VNDDIR}
+	cp sci/config/default ${VNDDIR}
+	umount ${VNDDIR}
+	mount -o async /dev/${FLASHDEV}a ${VNDDIR}
+	cp ${ROOT}/netbsd.flash ${VNDDIR}/netbsd
+	umount ${VNDDIR}
+	rm -rf ${VNDDIR}
+.endif
+
+development:core
+	(cd $(ROOT)/etc/; rm -f *);
+	(cd kernel/sys/arch/i386/conf/; config DYNARC);
+	(cd kernel/sys/arch/i386/compile/DYNARC/; /usr/bin/make depend; /usr/bin/make);
+	cp kernel/sys/arch/i386/compile/DYNARC/netbsd $(ROOT)/netbsd;
+	rm -f $(ROOT)/gated;
+	rm -f $(ROOT)/ds.tar;
+	(cd $(ROOT) ; make ds.tar)
+
+Xtelnetd:
+	cd telnetd ; /usr/bin/make -f Makefile.dist telnetd
+
+Xtelnet:
+	cd telnet ; /usr/bin/make -f Makefile.dist telnet
+
+Xmrouted:
+	cd mrouted ; /usr/bin/make mrouted
+Xxntp:
+	cd xntp/xntpd ; /usr/bin/make xntpd; \
+	strip xntpd
+
+Xssh:
+.if (${SSH} =="yes")
+	cd ssh ; rm -f sshd ssh-keygen ;\
+	/usr/bin/make -f Makefile.wrapper ;\
+	strip sshd; strip ssh-keygen
+.else
+	cd ssh ;\
+	echo "#!/bin/sh" > sshd ;\
+	echo "echo Sorry ssh not supported." >>sshd ;\
+	chmod 755 sshd ;\
+	echo "#!/bin/sh" > ssh-keygen ;\
+	echo "echo Sorry ssh not supported." >> ssh-keygen ;\
+	chmod 755 ssh-keygen
+.endif
+
+Xprograms:
+	cd programs ; /usr/bin/make SYSINCLUDE=`pwd`/../kernel/sys
+
+clean:
+	cd $(ROOT) && make clean
+	cd dtm_applications && make clean	
+	cd gated && make clean
+	cd kernel && make clean
+	cd openssl && make clean
+#	cd snmpsrc && make clean
+	cd $(INSTALL) && make clean
+	rm -f ds.tgz dr.tar
+	for dir in $(SUBDIRS); do \
+		(cd  $$dir ; /usr/bin/make clean ) ;\
+	done
+	cd ssh && make -f Makefile.wrapper clean
+
+real-clean:
+	(cd $(ROOT); make clean);\
+	rm -rf scisrc ;\
+	rm -rf dtm_applications ;\
+	rm -rf gated ;\
+	rm -rf kernel ;\
+	rm -rf openssl ;\
+#	rm -rf snmpsrc ;\
+	rm -rf $(INSTALL) ;\
+	rm -rf ds.tgz ;\
+	rm -rf dr.tar ;\
+	for dir in $(SUBDIRS) ; do (cd  $$dir ; /usr/bin/make clean ) ; done ;\
+	(cd ssh && make -f Makefile.wrapper clean)
+
+
+ds.tgz: $(ROOT)/ds.tar
+	gzip -c $(ROOT)/ds.tar > ds.tgz
+
+floppy:	ds.tgz
+	dd if=ds.tgz of=/dev/fd0a bs=18k seek=1 ;\
+	touch $(DYNASWITCH_IMAGE) ;\
+	chmod 666 $(DYNASWITCH_IMAGE) ;\
+	echo "#!/bin/sh" > $(DYNASWITCH_IMAGE) ;\
+	echo "#" >> $(DYNASWITCH_IMAGE) ;\
+	echo "# Copyright (c) 1999 Dynarc AB." >> $(DYNASWITCH_IMAGE) ;\
+	echo "#" >> $(DYNASWITCH_IMAGE) ;\
+	echo "" >> $(DYNASWITCH_IMAGE) ;\
+	echo "echo unpacking, please wait..." >> $(DYNASWITCH_IMAGE) ;\
+	echo "dd if=/dev/fd0a of=/tmp/ds.tgz bs=18k skip=1" >> $(DYNASWITCH_IMAGE) ;\
+	echo "cd /" >> $(DYNASWITCH_IMAGE) ;\
+        echo "gunzip < /tmp/ds.tgz | cpio -idv -H tar -R root" >> $(DYNASWITCH_IMAGE) ;\
+	echo "sync" >> $(DYNASWITCH_IMAGE) ;\
+	echo "rm /tmp/ds.tgz" >> $(DYNASWITCH_IMAGE) ;\
+	echo "exit 0" >> $(DYNASWITCH_IMAGE) ;\
+	dd if=$(DYNASWITCH_IMAGE) of=/dev/fd0a bs=18k
+
+# bug in interfaces variable in sci
+#	echo "echo making devicefiles" >> $(DYNASWITCH_IMAGE) ;\
+#	echo 'i=0 ; while [ $$i -lt 64 ] ; do rm -f /dev/e1p$$i ; /sbin/mknod /dev/e1p$$i c 47 $$i ; i=`expr $$i + 1` ; done' >> $(DYNASWITCH_IMAGE) ;\
+
+
+
+
+

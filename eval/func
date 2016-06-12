@@ -1,0 +1,218 @@
+
+SYNC_FILE=/proc/sys/vm/drop_caches
+SIZE_1G=1073741824
+SIZE_1M=1048576
+SIZE_1K=1024
+#minimal size to test with
+BLOCK_SIZE=4096
+
+#
+# print time in second
+# i.e. hh:mm:ss => 3600*hh+60*mm+ss
+#
+function currentTimeSec()
+{
+	read -r h m s <<< `date +%T|tr ':' ' '`
+	echo $(((h*60*60)+(m*60)+s))
+}
+
+
+#
+# get result of command time in ms and the result file removed
+#
+# [In]
+# $1 - file name contain output of time
+function timeResultInMS()
+{
+	local timeAll timeS timeMS
+
+	test ! -f $1 && echo "$1 doesn't exist !!!" && exit
+
+	#remove "keep XXmX.XXXs"
+	timeAll=`grep real $1| cut -f2`
+	rm -f $1
+	timeS=`echo $timeAll| sed -r 's/m.+$//'`
+	timeMS=`echo $timeAll| cut -f2 -dm| sed -r 's/[.s]//g'`
+	#echo $timeAll $timeS $timeMS
+	echo $((timeS*60*1000+timeMS))
+}
+
+
+#
+# calculate statistic of log file excluding the first item.
+# each line containing "Cpu" is used for calculation
+# The print the average of idle and wait time
+#
+# [In]
+# $1 - file name with log of top
+function cpuStat()
+{
+	test -f $1 && {
+		#extract Cpu... and get field of idle and wait
+		awk '/Cpu/{print $5 $6}' $1| sed -e 's/%id,/ /g' | sed -e 's/%wa,//g' |\
+		awk 'BEGIN{ id=0;wa=0 }\
+		    { if(NR>1) {id+=$1;wa+=$2} }\
+		    END{ id=id/(NR-1);wa=wa/(NR-1);sum=id+wa;print id, wa, sum}'
+	}
+}
+
+
+# execute dd command, and calculate time
+# [In]
+# S1 - input file
+# S2 - output file
+# S3 - block size
+# S4 - block count
+function doDump()
+{
+	local start end diff size    #not used
+	local timeMS speed topPID tmpfile
+
+	tmpfile=/tmp/topLog
+	rm -f $tmpfile
+
+	echo 3> $SYNC_FILE	
+	#not used start=`currentTimeSec`
+	#dd if=$1 of=$2 bs=$3 count=$4 2>/dev/null
+	#log cpu usage into tmpfile
+	top -b -d1 -p1 >$tmpfile &
+	topPID=$!
+
+	{ time dd if=$1 of=$2 bs=$3 count=$4; echo 3>/SYNC_FILE; } 2>.result
+	#not used end=`currentTimeSec`
+	kill -2 $topPID >/dev/null 2>&1
+	#get time of time result
+	timeMS=`timeResultInMS .result`
+
+	size=`expr $3 \* $4`
+	speed=$((size/timeMS))
+	if [ $speed -gt 1024 ]; then
+		speed=`expr $speed / 1024`
+		echo "transfer $size-B in $timeMS-ms, $speed-MB/s"
+	else
+		echo "transfer $size-B in $timeMS-ms, $speed-KB/s"
+	fi
+	
+	cpuStat $tmpfile
+}
+
+
+# check and modify test size, 4096B is minimal test size
+# [In]
+# $1 - test size
+# [Out]
+# DISPLAY_SIZE - xxG or xxM or xxK
+# COUNT - number of block in BLOCK_SIZE
+# DUMP_SIZE
+function checkSize()
+{
+	#round down to BLOCK_SIZE
+	COUNT=`expr $1 / $BLOCK_SIZE`
+	if [ $COUNT -eq 0 ]; then
+		echo "Test size too small"
+		DISPLAY_SIZE=0
+		DUMP_SIZE=0
+		return
+	fi
+
+	if [ $1 -ge $SIZE_1G ]; then
+		DISPLAY_SIZE=`expr $1 / $SIZE_1G`G
+	elif [ $1 -ge $SIZE_1M ]; then
+		DISPLAY_SIZE=`expr $1 / $SIZE_1M`M
+	else
+		DISPLAY_SIZE=`expr $1 / $SIZE_1K`K
+	fi
+
+	echo "Size=$DISPLAY_SIZE, BS=$BLOCK_SIZE, COUNT=$COUNT"
+	DUMP_SIZE=`expr $COUNT \* $BLOCK_SIZE`
+}
+
+#################
+# use config file
+#################
+USB=
+NFS=
+HD=
+TestItem=
+
+#
+# test with file config
+# USB=path/name
+# NFS=path/name
+# HD=path/name
+#
+# [In]
+# $1 - file name of test config, not checked must be present
+# [Out]
+# USB - file name of usb
+# NFS - file name of NFS
+# HD - file name of HD
+# TestItem - list of above items
+#
+function checkFile()
+{
+	USB=`grep USB $1 | cut -f2 -d=`
+	NFS=`grep NFS $1 | cut -f2 -d=`
+	HD=`grep HD $1 | cut -f2 -d=`
+	
+	test ! -z "$USB" && test ! -f $USB && USB=
+	test ! -z "$NFS" && test ! -f $NFS && NFS=
+	test ! -z "$HD" && test ! -f $HD && HD=
+
+	test ! -z "$USB" && TestItem="$USB $TestItem"
+	test ! -z "$NFS" && TestItem="$NFS $TestItem"
+	test ! -z "$HD" && TestItem="$HD $TestItem"
+}
+
+
+#
+# given file name, return USB or HD or NFS
+# [In]
+# $1 - file name, can be MEM
+#
+function getItem()
+{
+	[ "$1" == MEM ] && echo MEM
+	[ "$1" == "$USB" ] && echo USB
+	[ "$1" == "$HD" ] && echo HD
+	[ "$1" == "$NFS" ] && echo NFS
+}
+
+
+#
+# test with file config
+# USB=path/name
+# NFS=path/name
+# HD=path/name
+#
+# [In]
+# $1 - file name of test config, not checked must be present
+#
+function doFile()
+{
+	local ss dd
+
+	checkFile $1
+	test -z "$TestItem" && echo nothing to test && exit
+	TestItem="$TestItem MEM"
+	echo "list=\"$TestItem\""
+	echo "USB=$USB"
+	for src in $TestItem; do
+		for dst in $TestItem; do
+			[ $src == MEM ] && [ $dst == MEM ] && continue
+			ss=`getItem $src`
+			dd=`getItem $dst`
+			source=$src
+			[ $src == MEM ] && source=/dev/zero
+			target="$dst"_from_"$ss"
+			[ $dst == MEM ] && target=/dev/null
+
+			echo "**** start $ss -> $dd ****"
+			doDump $source $target $BLOCK_SIZE 262144
+			echo "**** end $ss -> $dd ****"
+			echo ""
+		done
+	done
+}
+
+

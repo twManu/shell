@@ -1,0 +1,14 @@
+tag	yyyy/mm/dd	log
+---------------------------------------------------------------------------------------------------
+init	2011/08/21	Add script to modify CVS server IP
+			FILE: chgcvsroot.sh
+	2011/08/22	Add more files
+		+ bashrc.txt - use bashrc setting
+		+ command_vi.txt - quick guide to VI command
+		+ comment.sh - not sure except get DEFINE
+		+ commentout.sh - remove comments
+		+ copy_dvb.sh - copy kernel dvb files
+		+ cusdir.sh - some use of grep
+		+ cut.txt - use of cut
+		+ find.txt - some use of find
+			

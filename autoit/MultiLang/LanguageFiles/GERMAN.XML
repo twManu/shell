@@ -1,0 +1,13 @@
+<main_gui>Test GUI</main_gui>
+<mnu_file>Datei</mnu_file>
+<mnu_file_exit>Ausgang</mnu_file_exit>
+<pic1tip>Dies ist ein Bild habe ich während des Fischens</pic1tip>
+<grp_random>Stichprobenartige Kontrollen</grp_random>
+<combo>Anders|Einträge|In|Combo</combo>
+<chkbox>Prüfen Sie diese Kontrolle</chkbox>
+<radio1>Erste Option</radio1>
+<radio2>Zweite Option</radio2>
+<radio3>Dritte Option</radio3>
+<list>Von|Top|Zu|Boden</list>
+<edit1>Dies ist eine lange Sentance über einige andere Dinge. Wirklich wirklich lange. Eigentlich ist es nun einen neuen Absatz.@CRLF@CRLFSelbst hat Zeilenumbrüche ...</edit1>
+<edit2>Ich fühlte mich wie mit mehr Speicherplatz, so ist es hier.</edit2>

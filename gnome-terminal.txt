@@ -1,0 +1,25 @@
+- setting profile amlogic  of "title and command" in ubuntu 12.04.1
+	+ initial title=amlogic
+	+ keep initial title
+	+ update login records when command is launched
+	+ run a custom command instead of my shell
+		- /bin/bash -c "source /home/manuchen/bin/setam.sh; exec gnome-ternimal --title=amlogic --profile=Default"
+	
+- setting profile Default  of "title and command"
+	+ initial title=Default
+	+ append initial title
+	+ update login records when command is launched
+
+#
+# when there is function, it is no more valid after "exec"
+# to run another source file is better
+#
+- another setting
+	+ Prepare somercfile:
+		- cat somercfile
+		    source ~/.bashrc
+		    echo foo
+		    echo bar
+
+	+ Run with
+	  $ gnome-terminal -e "bash --rcfile somercfile"

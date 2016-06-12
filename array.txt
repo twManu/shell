@@ -1,0 +1,25 @@
+ÿþbash¤Uarrayªº´XºØ¨Ï¥Î¤èªk 
+#!/bin/bash
+#¤@Á|±NÅÜ¼Æ³]©w¨ì°}¦C¤¤
+array=(Redhat Novell MicroSoft Sun IBM HP Dell)
+
+#§Q¥Îfor loop±N°}¦C¤¤ªºÅÜ¼Æ¦L¥X
+for i in 0 1 2 3 4 5 6
+do
+echo "array[$i]=${array[$i]}"
+done
+
+#³]©w¶¡¹j²Å¸¹¬°: ·f°t$*±N°}¦Cªº­È¤@¤f®ð¿é¥X
+IFS=:
+echo "${array[*]}"
+
+#³]©w¶¡¹j²Å¸¹¬°´«¦æ,·f°t$*±N°}¦Cªº­È¤@¤f®ð¿é¥X
+IFS=$'\n'
+echo "${array[*]}"
+
+#±N°}¦C¤¤ªº­È§Q¥Î$@¤@¤f®ð¿é¥X»P$*¤£¦Pªº¬O,¤£·|±N­È¦X¨Ö¦¨³æ¤@¦r¦ê
+echo "${array[@]}"
+
+
+#¦L¥X°}¦C¤¤¦³´Xµ§¸ê®Æ
+echo "${#array[@]}"

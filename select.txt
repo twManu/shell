@@ -1,0 +1,34 @@
+#!/bin/bash
+
+PS3="Choose: "
+select i in a336 c039 quit
+ do 
+ [ "$i" = "quit" ]  && exit 0
+ echo "You chose $i"
+ break  #otherwise user has to choose again and again
+done
+===================================
+
+the list of select can be omit and it will default to "$@", i.e., the list of quoted command-line arguments.
+
+===================================
+print 'Select your terminal type:'
+PS3='terminal? '
+select term in \
+    'Givalt VT100' \
+    'Tsoris VT220' \
+    'Shande VT320' \
+    'Vey VT520'
+do
+    case $REPLY in
+        1 ) TERM=gl35a ;;
+        2 ) TERM=t2000 ;;
+        3 ) TERM=s531 ;;
+        4 ) TERM=vt99 ;;
+        * ) print 'invalid.' ;;
+    esac
+    if [[ -n $term ]]; then
+        print TERM is $TERM
+        break
+    fi
+done

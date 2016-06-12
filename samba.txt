@@ -1,0 +1,4 @@
+- Fedora (gdm)
+    + system -> administration -> server settings -> samba
+    + set group name
+    + adduser

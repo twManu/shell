@@ -1,0 +1,8 @@
+1. >sudo /usr/sbin/useradd -d /home/[new] -g cvs -s /bin/bash [new]
+2. add [new] to cvs of /etc/group
+3. remove passwd of [new] with
+	>sudo passwd -d [new]
+4. set passwd
+	>su - [new]
+	>passwd
+	

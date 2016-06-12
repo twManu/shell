@@ -1,0 +1,9 @@
+#in command line
+find / -name "*.c*" -exec rm -rf {} \;
+find . -maxdepth 1 -name "*.o"
+
+#in script
+find . \-name "*.c" \-exec rm {} \;
+find . \-name "*.cpp" \-exec rm {} \;
+find . \-name "*.mm" \-exec rm {} \;
+find . \-name "*.m" \-exec rm {} \;

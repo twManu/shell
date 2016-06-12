@@ -1,0 +1,6 @@
+- /etc/exports
+	+ example
+		/home/hungjiun  (rw,sync)
+
+- to export NFS
+	+ $> sudo exportfs -a

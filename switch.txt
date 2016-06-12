@@ -1,0 +1,14 @@
+for filename in $*; do
+    case $filename in
+        *.c )
+            objname=${filename%.c}.o
+            ccom $filename $objname ;;
+        *.s )
+            objname=${filename%.s}.o
+            as $filename $objname ;;
+        *.o ) ;;
+        *   )
+            print "error: $filename is not a source or object file."
+            return 1 ;;
+    esac
+done

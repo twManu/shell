@@ -1,0 +1,91 @@
+Build the Software
+
+	Setup utility/NFS/TFTP
+		host> sudo apt-get install genromfs (for building the kernel)
+		host> sudo apt-get install minicom
+		host> install tftpd-hpa and nfs-kernel-server (for kernel download and file access)
+		host> ps aux | grep ftp .... probably /var/lib/tftpboot is the 'tftp root'
+		host> sudo mkdir /mnt/nfs (nfs root)
+		host> create /etc/exportfs with '/mnt/nfs *(ro,sync,no_subtree_check)'
+		host> reboot to have nfsd work 
+
+	Install and Configure CodeSourcery G++ Lite
+		host> tar jxvf mips-4.3-51-mips-linux-gnu-i686-pc-linux-gnu.tar.bz2
+		host> export PATH=`pwd`/mips-4.3/bin:$PATH
+
+	Setup CPU Keys and Utilities
+		host> tar zxvf CPU_KEYS_SMP86xx_2010-02-12.tar.gz
+		host> cd CPU_KEYS_SMP86xx_2010-02-12
+		edit CPU_KEYS.env: 
+			DEFAULT_KEY_DOMAIN=8644_ES1_prod
+			DEFAULT_ZBOOT_CERTID=0000
+			DEFAULT_CPU_CERTID=0001
+		host> source CPU_KEYS.env
+
+	Setup rootfs for extra utilities and libraries
+		host> export COMPILKIND="release glibc codesourcery hardfloat"
+		host> tar jxvf cs_rootfs_1.2.12.tar.bz2
+		host> cd cs_rootfs_1.2.12
+		host> make
+		host> source rootfs-path.env
+	
+	Build the Kernel
+		host> tar jxvf smp86xx_kernel_source_R2.6.22-36.tar.bz2
+		host> cd smp86xx_kernel_source_R2.6.22-23 
+		host> make kernel-source-2.6.22.19
+		host> cd linux-2.6.22.19
+		host> cp ../../.config .
+		host> make all
+		host> make modules
+		host> make modules_install
+		host> make all zbimage-linux-xload
+		copy arch/mips/boot/zbimage-linux-xload to tftp_server root
+
+	Build a867 Driver
+		host> tar jxvf a867_drv_v1.0.28.tar.bz2
+		host> cd a867_drv_v1.0.28
+		host> make KOBJ=[BUILD_ROOT]/smp86xx_kernel_source_R2.6.22-36/linux KSRC=[BUILD_ROOT]/smp86xx_kernel_source_R2.6.22-36/linux
+		copy a867.ko to nfs_server root
+
+	Build util
+		host> cd dvb-apps-4746d76ae4b6/util/scan
+		host> make CC=mipsel-linux-gcc
+		copy scan to nfs_server root
+		copy dvb-t/tw-Taipei to nfs_server root
+
+		host> cd dvb-apps-4746d76ae4b6/util/szap
+		host> make CC=mipsel-linux-gcc
+		copy tzap to nfs_server root
+
+Run the Software
+
+	Terminal emulation program Setting:
+		Pbs/Par/Bits: 115200 8N1
+		Flow Control: N/A
+		Press and hold key "2" in Terminal Program and press PWR BUTTON on the target board...until the message stops
+		Change Baud Rate setting to 9600 [enter]
+
+	Load Linux Kernel
+		YAMON> net init
+		YAMON> load -b tftp://[tftp_ip]/zbimage-linux-xload 0xa7000000
+		YAMON> dump romfs 0xa7000000
+		YAMON> load zbf 0xa7000090
+		YAMON> go
+
+	Load a867 Driver
+		Linux Login: root
+		target> udhcpc
+		target> mount -t nfs -o nolock [NFS_SERVER]:[NFS_PATH] /mnt
+		target> modprobe tangox-ehci-hcd
+		target> modprobe dvb-core
+		target> modprobe dvb-usb
+		target> modprobe dvb-pll
+		target> cd /mnt
+		target> insmod a867.ko
+
+	Run the dvb utils
+		target> mkdir /root/.tzap
+		target> ./scan tw-Taipei | tee /root/.tzap/channels.conf
+
+
+		
