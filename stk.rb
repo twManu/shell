@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+# encoding: UTF-8
 
 taiwan = [
 	  'http://stockq.org/index/TWSE.php'\
@@ -32,7 +34,6 @@ nasdaq = [
 markets = [ taiwan, shanghai, japan, dutch, dow, nasdaq ]
 	
 require 'watir-webdriver'
-
 #give options default value
 $options = {'debug' => 0}
 

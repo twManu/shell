@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 $myID = 'lessmoney'
 $myPW = 'lleopard2'
 $jkLink = "www.jkforum.net/forum.php"
