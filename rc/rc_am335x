@@ -1,0 +1,11 @@
+# /bin/bash -rcfile <this file>
+#
+
+BASE_RC=~/.bashrc
+test -f ${BASE_RC} && source ${BASE_RC}
+
+export WKDIR=/home/manu/am335x3205
+export ARCH=arm
+export PATH=~/bin/linaro/bin:$PATH
+export CROSS_COMPILE=arm-linux-gnueabihf-
+export NFSROOT=${WKDIR}/targetNFS
