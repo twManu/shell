@@ -1,0 +1,29 @@
+#### 
+# assume you have an initrd.img at /tftpboot
+# which is actually a gz file. unzip it after renaming
+####
+$ cp /tftpboot/initrd.img  initrd.gz
+$ ls
+initrd.gz
+$ gunzip initrd.gz
+$ ls
+initrd
+
+#
+# copy it out
+#
+$ mkdir tmp; cd tmp
+$ cpoio -id < ../initrd
+16524 blocks
+$ ls
+bin  dev  etc  init  modules proc  sbin  selinux  sys  tmp  var
+
+#
+# modify and pack it back into the archive
+#
+$ find . | cpio --create --format='newc' > ~/newinitrd
+$ cd ~; gzip newinitrd
+$ ls
+newinitrd.gz
+$ mv newinitrd.gz newinitrd.img
+ 
