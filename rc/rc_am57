@@ -15,7 +15,7 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 export CC=${CROSS_COMPILE}gcc
 export CXX=${CROSS_COMPILE}g++
 export ARCH=arm
-export PS1="\[\e[32;1m\][tisdk31]\[\e[0m\]:\w> "
-export NFSROOT=
-export INSTALL_MOD_PATH=
+export PS1="\[\e[32;1m\][tisdk]\[\e[0m\]:\w> "
+export NFSROOT=~/tisdk
+export INSTALL_MOD_PATH=${NFSROOT}/targetNFS
 
