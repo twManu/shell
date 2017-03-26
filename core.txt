@@ -1,0 +1,9 @@
+#personal
+ulimit -c unlimited
+
+#global
+/etc/sysctl.conf
+
+#add this
+kernel.core_pattern=/tmp/core.%e.%p%h.%t
+
