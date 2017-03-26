@@ -7,11 +7,15 @@
 
 source ~/.bashrc
 
-#AM57_DIR can be ti-sdk bin or src directory
-export AM57_DIR=/home/aten-3a00/ti
-export PATH=${AM57_DIR}/am57-02.00.01.07/linux-devkit/sysroots/x86_64-arago-linux/usr/bin:$PATH
+#
+# below from TI_SDK_PATH/Rules.make
+#
+export PATH=~/bin/linaro/bin:$PATH
 export CROSS_COMPILE=arm-linux-gnueabihf-
 export CC=${CROSS_COMPILE}gcc
 export CXX=${CROSS_COMPILE}g++
-export ARCH=armv7-a
-export CFLAGS="-march=armv7-a -marm -mthumb-interwork -mfloat-abi=hard -mfpu=neon -mtune=cortex-a15"
+export ARCH=arm
+export PS1="\[\e[32;1m\][tisdk]\[\e[0m\]:\w> "
+export NFSROOT=~/tisdk
+export INSTALL_MOD_PATH=${NFSROOT}/targetNFS
+
