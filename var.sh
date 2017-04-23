@@ -37,3 +37,7 @@ parameter-set-default() {
 
 parameter-default
 parameter-set-default
+
+aa='echo $MODEL'
+MODEL=4
+echo `eval ${aa}`
