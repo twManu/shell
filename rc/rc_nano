@@ -1,0 +1,9 @@
+# need to install cuda-repo-xxx from HOST
+#sudo apt update; sudo apt install -y vim gitk cifs-utils 
+#sudo apt install -y libavutil-dev libavdevice-dev libavfilter-dev libavformat-dev libpostproc-dev libswresample-dev libswscale-dev libglew-dev libfreetype6-dev libxmu-dev libxi-dev libxrandr-dev libxinerama-dev libxcursor-dev libfontconfig1-dev libturbojpeg0-dev libsoil-dev libgstreamer1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev libpython2.7-dev libglfw3-dev libglm-dev libglew-dev libglm-dev libsdl2-dev libsoil-dev
+
+export EDITOR=vim
+export CUDA_PATH=/usr/local/cuda
+alias smbnas='sudo mount.cifs //62.11.20.100/share/git ~/nas -o uid=$(id -u),gid=$(id -g),username=manu,vers=1.0'
+export PATH=${CUDA_PATH}/bin:$PATH
+export LD_LIBRARY_PATH=${CUDA_PATH}/lib64:$LD_LIBRARY_PATH
