@@ -7,3 +7,4 @@ export CUDA_PATH=/usr/local/cuda
 alias smbnas='sudo mount.cifs //62.11.20.100/share/git ~/nas -o uid=$(id -u),gid=$(id -g),username=manu,vers=1.0'
 export PATH=${CUDA_PATH}/bin:$PATH
 export LD_LIBRARY_PATH=${CUDA_PATH}/lib64:$LD_LIBRARY_PATH
+alias stopX='sudo systemctl stop gdm; sudo loginctl terminate-seat seat0'
