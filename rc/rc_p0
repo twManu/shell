@@ -1,0 +1,4 @@
+# bash --rcfile ~/.rc_p0
+source ~/.bashrc
+export PATH=/home/manu/bin/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+export CORSS_COMPILE=gcc-arm-none-eabi-
