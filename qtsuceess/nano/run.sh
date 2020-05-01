@@ -1,21 +1,18 @@
-# almost follow chinese way (no KHR) but I also create symblink as western way 
-# sudo apt install symlinks nfs-kernel-server
-# sudo vi /etc/exports:
-#   <add> / *(ro,fsid=root,no_root_squash,nohide,insecure,no_subtree_check)
-# sudo exportfs -a
-# sudo symlinks -c -r /
 # delete config.cache
 # sudo apt install '.*libxcb.*' libxrender-dev libxi-dev libfontconfig1-dev libudev-dev libxkbcommon-dev
 # apt download libgles2-mesa-dev libegl1-mesa-dev
 # mkdir GLES EGL
 # cd GLES; ar x ../libgles2*.deb; tar xf data.tar.xz
 # cd EGL; ar x ../libegl1*.deb; tar xf data.tar.xz
+# need to copy KHR as well
 # copy to /usr/include
 # sudo usermod -a -G input manu //reboot takes effect logout?
 # then
 # add .bashrc
 # *** modify qtbase/mkspecs/devices/linux-jetson-tx1-g++/qmake.conf
 # QMAKE_INCDIR_POST remove /usr/include
+# change to eglfs_kms_egldevice
+# see ../qmake.conf
 # ***
 #QT_PATH=/usr/local/qt5
 #export PATH=${QT_PATH}/bin:$PATH
