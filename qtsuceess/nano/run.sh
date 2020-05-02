@@ -10,7 +10,7 @@
 # then
 # add .bashrc
 # *** modify qtbase/mkspecs/devices/linux-jetson-tx1-g++/qmake.conf
-# QMAKE_INCDIR_POST remove /usr/include
+# QMAKE_INCDIR_POST /usr/include becomes to /usr/include/drm since pkg-config disabled automatically and need drm for egldevice
 # change to eglfs_kms_egldevice
 # see ../qmake.conf
 # ***
