@@ -1,6 +1,4 @@
 #!/bin/bash
-#finally need to copy ../qmake.conf to jetson-tx1-g++
-
 sudo apt download libgles2-mesa-dev libegl1-mesa-dev
 mkdir GLES EGL
 pushd GLES; ar x ../libgles2*.deb; tar xf data.tar.xz; sudo cp -a usr/include/GLES* /usr/include; popd

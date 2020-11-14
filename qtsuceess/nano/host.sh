@@ -1,3 +1,4 @@
+# need to copy ../qmake.conf to jetson-tx1-g++
 #export ROOTFS=~/cross/nano_441
 #export TARGET_ROOTFS=${ROOTFS}
 #export CROSS_COMPILE=aarch64-linux-gnu-
