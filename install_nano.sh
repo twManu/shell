@@ -60,9 +60,9 @@ do_bashrc()
 			return
 		fi
 	fi
-	test ! -d ~/nas && mkdir ~/nas
+	mkdir -p ~/nas ~/work/gh
 	echo "alias smbnas='sudo mount.cifs //${IP_NAS}/share/git ~/nas -o uid=\$(id -u),gid=\$(id -g),username=manu,vers=1.0'" >> ~/.bashrc
-
+	cd ~/work/gh; git clone https://github.com/twManu/shell.git
 }
 
 
@@ -84,6 +84,8 @@ do_app_install()
 
 	sudo apt update
 	sudo apt install -y $APPLIST
+
+	sudo snap install barrier
 }
 
 
