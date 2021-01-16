@@ -5,6 +5,10 @@ IP_KVM=62.11.20.106
 IP_NAS=62.11.20.100
 IP_PC=62.11.20.99
 IP_SERVER=62.11.20.98
+PATH_GITHUB=~/work/gh
+PATH_NAS=~/nas
+PATH_SHELL=${PATH_GITHUB}/shell
+URL_GIT_SHELL="https://github.com/twManu/shell.git"
 
 #
 # in   : S1 - user name to set permision with
@@ -60,9 +64,10 @@ do_bashrc()
 			return
 		fi
 	fi
-	mkdir -p ~/nas ~/work/gh
-	echo "alias smbnas='sudo mount.cifs //${IP_NAS}/share/git ~/nas -o uid=\$(id -u),gid=\$(id -g),username=manu,vers=1.0'" >> ~/.bashrc
-	cd ~/work/gh; git clone https://github.com/twManu/shell.git
+	mkdir -p ${PATH_NAS} ${PATH_GITHUB}
+	echo "alias smbnas='sudo mount.cifs //${IP_NAS}/share/git ~/nas -o uid=\$(id -u),gid=\$(id -g),username=manu,vers=1.0'" >>~/.bashrc
+	echo "export PATH=${PATH_SHELL}:\${PATH}" >>~/.bashrc
+	test ! -d ${PATH_SHELL} && cd ${PATH_GITHUB}; git clone ${URL_GIT_SHELL}
 }
 
 
@@ -72,7 +77,7 @@ do_bashrc()
 #
 do_app_install()
 {
-	APPLIST="gitk vim samba minicom v4l-utils"
+	APPLIST="gitk vim cifs-utils minicom v4l-utils"
 	test $X64_CPU = "x86_64" && APPLIST="$APPLIST ia32-libs lib32ncurses5-dev lib32z1-dev lib32readline-gplv2-dev"
 
 	get_answer "Proceed to install $APPLIST ?"
