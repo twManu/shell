@@ -6,6 +6,7 @@ IP_NAS=62.11.20.100
 IP_PC=62.11.20.99
 IP_SERVER=62.11.20.98
 
+APPLIST="gitk vim samba minicom v4l-utils terminator fcitx-libs-dev fcitx-table fcitx-tools gcin gcin-tables"
 #
 # in   : S1 - user name to set permision with
 #
@@ -72,7 +73,6 @@ do_bashrc()
 #
 do_app_install()
 {
-	APPLIST="gitk vim samba minicom v4l-utils"
 	test $X64_CPU = "x86_64" && APPLIST="$APPLIST ia32-libs lib32ncurses5-dev lib32z1-dev lib32readline-gplv2-dev"
 
 	get_answer "Proceed to install $APPLIST ?"
