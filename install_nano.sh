@@ -10,6 +10,7 @@ PATH_NAS=~/nas
 PATH_SHELL=${PATH_GITHUB}/shell
 URL_GIT_SHELL="https://github.com/twManu/shell.git"
 
+APPLIST="gitk vim cifs-utils minicom v4l-utils terminator fcitx-libs-dev fcitx-table fcitx-tools gcin gcin-tables"
 #
 # in   : S1 - user name to set permision with
 #
