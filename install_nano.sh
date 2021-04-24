@@ -77,7 +77,7 @@ do_bashrc()
 #
 do_app_install()
 {
-	APPLIST="gitk vim cifs-utils minicom v4l-utils"
+	APPLIST="gitk vim cifs-utils minicom v4l-utils terminator virtualenv virtualenvwrapper python-pip3"
 	test $X64_CPU = "x86_64" && APPLIST="$APPLIST ia32-libs lib32ncurses5-dev lib32z1-dev lib32readline-gplv2-dev"
 
 	get_answer "Proceed to install $APPLIST ?"
