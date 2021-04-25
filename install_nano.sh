@@ -57,7 +57,8 @@ get_answer()
 #
 do_bashrc()
 {
-	if `grep smbnas ~/.bashrc`; then
+	result=`grep smbnas ~/.bashrc`
+	if [ -n "${result}" ]; then
 		get_answer "The bashrc might be updated, continue to process ?"
 		if [ $g_ANS == 'n' ]; then
 			exit 0
@@ -78,7 +79,7 @@ do_bashrc()
 #
 do_app_install()
 {
-	APPLIST="gitk vim cifs-utils minicom v4l-utils terminator virtualenv virtualenvwrapper python-pip3"
+	APPLIST="gitk vim cifs-utils minicom v4l-utils terminator virtualenv virtualenvwrapper python3-pip python3-dev apt-utils"
 	test $X64_CPU = "x86_64" && APPLIST="$APPLIST ia32-libs lib32ncurses5-dev lib32z1-dev lib32readline-gplv2-dev"
 
 	get_answer "Proceed to install $APPLIST ?"
