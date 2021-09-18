@@ -7,6 +7,7 @@ LABEL maintainer="manuchen@home"
 LABEL version="0.0"
 LABEL description="base of ubuntu"
 ENV TZ=Asia/Taipei
+ENV APP="vim git curl build-essential g++ software-properties-common wget"
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get update && apt-get install -y vim git curl build-essential g++ software-properties-common 
+RUN apt-get update && apt-get install -y $APP 
 RUN echo EDITOR=vim >>~/.bashrc
