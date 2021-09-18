@@ -2,7 +2,7 @@
 # docker build -t ubuntu2004:0010 .
 # 001x is for go
 #
-FROM ubuntu20:manu00
+FROM ubuntu2004:0000
 LABEL maintainer="manuchen@home"
 LABEL version="0.0"
 LABEL description="base of go"
