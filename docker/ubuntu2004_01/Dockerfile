@@ -1,6 +1,6 @@
-# must build ubuntu20:manu00 in advance
-# docker build -t ubuntu20:manu01 .
-# 00 is base
+# must build ubuntu2004:0000 in advance
+# docker build -t ubuntu2004:0010 .
+# 001x is for go
 #
 FROM ubuntu20:manu00
 LABEL maintainer="manuchen@home"

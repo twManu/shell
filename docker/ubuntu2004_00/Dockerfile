@@ -1,5 +1,5 @@
 # Download base image ubuntu 20.04
-# docker build -t ubuntu20:manu00 .
+# docker build -t ubuntu2004:0000 .
 # 00 is base, python3.8 by default
 #  g++
 FROM --platform=linux/amd64 ubuntu:20.04
