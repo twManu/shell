@@ -7,5 +7,4 @@ LABEL maintainer="manuchen@home"
 LABEL version="0.0"
 LABEL description="base of go"
 ENV VER=1.14.8
-RUN wget -c https://dl.google.com/go/go$VER.linux-amd64.tar.gz -O - | tar -xz -C /usr/local
-RUN echo "export PATH=\$PATH:/usr/local/go/bin" >>~/.bashrc
+RUN wget -c https://dl.google.com/go/go${VER}.linux-amd64.tar.gz -O - | tar -xz -C /usr/local && echo "export GOPATH=/usr/local/go" >>~/.bashrc && echo "export PATH=\$PATH:\$GOPATH/bin" >>~/.bashrc
