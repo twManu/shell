@@ -1,10 +1,13 @@
 # Download base image jenkins/jenkins:latest
-# docker build -t manu-jenkins:0001 .
+# docker build -t manu-jenkins:0100 .
 # RUN:
-#  docker run -d --name mj --user root -p 8080:8080 -p 50000:50000 -v /var/run/docker.sock:/var/run/docker.sock manu-jenkins:0001
+#  docker run -d --name mj --user root -p 8080:8080 -p 50000:50000 -v /var/run/docker.sock:/var/run/docker.sock manu-jenkins:0100
 # Check password: in /var/jenkins_home/secrets/initialAdminPassword
 #  docker exec -it mj /bin/bash
-# 00 is base
+# NOTE:
+#  jenkins shell use sh (dash), at top of script use "#!/bin/bash" without any blank to make .bashrc working
+# 00 is major 00 is minor
+# 01 is major 00 is minor
 # must have USER root to avoid apt-key or something fail
 FROM jenkins/jenkins:latest
 LABEL maintainer="manuchen@home"
