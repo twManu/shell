@@ -4,7 +4,7 @@
 #  g++
 FROM --platform=linux/amd64 ubuntu:20.04
 LABEL maintainer="manuchen@home"
-LABEL version="0.0"
+LABEL version="00.00"
 LABEL description="base of ubuntu"
 ENV TZ=Asia/Taipei
 ENV APP="vim git curl build-essential g++ software-properties-common wget"
