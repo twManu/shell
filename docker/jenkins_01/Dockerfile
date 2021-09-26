@@ -9,6 +9,10 @@
 # 00 is major 00 is minor
 # 01 is major 00 is minor
 # must have USER root to avoid apt-key or something fail
+#
+# Suggested modules:
+# 1. Copy Artifact
+# 2. Pipeline Utility Steps
 FROM manu-jenkins:0000
 LABEL maintainer="manuchen@home"
 LABEL version="01.00"
