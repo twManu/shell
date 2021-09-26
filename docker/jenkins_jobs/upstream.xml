@@ -1,0 +1,75 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>cleanDir</name>
+          <description>clean working directory before build</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>target</name>
+          <description>build or build_run accepted</description>
+          <defaultValue>build</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+     environment {
+        dateTime = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+        outFile = &quot;output.txt&quot;
+    }
+    stages {
+        stage(&apos;clean upstream&apos;) {
+            when {
+                expression { params.cleanDir }
+            }
+            steps{
+                script { //avoid pipe stop
+                    try { sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/*&quot; } catch (all) {}
+                    try { sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/.*&quot; } catch (all) {}
+                }
+            }
+        }
+        stage(&apos;upstream build&apos;) {
+            steps {
+                script {
+                    if ( params.target==&quot;build&quot; ) {echo &quot;upstream build with target ${params.target}&quot; }
+                    else {
+                        if ( params.target==&quot;build_run&quot; ) { echo &quot;upstream build with target ${params.target}&quot; }
+                        else { echo &quot;upstream build target not supported&quot; }
+                    }
+                }
+            }
+        }
+        stage(&apos;deploy&apos;) {
+            steps {
+                writeFile file: &quot;${outFile}&quot;, text: &quot;${JOB_NAME}-${BUILD_NUMBER}_${dateTime}\n&quot;
+                archiveArtifacts artifacts: &quot;${outFile}&quot;
+            }
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
