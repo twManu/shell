@@ -1,0 +1,104 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.plugins.copyartifact.CopyArtifactPermissionProperty plugin="copyartifact@1.46.2">
+      <projectNameList>
+        <string>*</string>
+      </projectNameList>
+    </hudson.plugins.copyartifact.CopyArtifactPermissionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+    environment {
+        currentDate1 = sh(returnStdout: true, script: &apos;date +%Y-%m-%d&apos;).trim()
+        currentDate2 = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+    }
+    stages {
+        stage(&apos;S0 clean up&apos;) {
+            steps{
+                script { //avoid pipe stop
+                    try {
+                        sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/*&quot;
+                    } catch (all) {}
+                    try {
+                        sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/.*&quot;
+                    } catch (all) {}
+                }
+            }
+        }
+        stage(&apos;S1 Build testPipe&apos;) {
+            steps {
+                script {
+                    def built = build(
+                        job:&apos;testPipe&apos;,
+                        parameters:[
+                            booleanParam(name:&apos;cond1&apos;, value:true)
+                        ]
+                    )
+                    copyArtifacts(
+                        projectName: &apos;testPipe&apos;,
+                        selector: specific(&quot;${built.number}&quot;),
+                        target: &quot;${WORKSPACE}&quot;,
+                        filter: &quot;output.txt&quot;
+                    )
+                }
+            }
+        }
+        stage(&apos;S2&apos;) {
+            failFast true
+            parallel {
+                stage(&apos;S2-A&apos;) {
+                    steps {
+                        echo &quot;${currentDate2}&quot;
+                        echo &quot;S2-A&quot;
+                    }
+                }
+                stage(&apos;S2-B&apos;) {
+                    steps {
+                        echo &quot;S2-B&quot;
+                    }
+                }
+                stage(&apos;S2-C&apos;) {
+                    stages {
+                        stage(&apos;S2-C-1&apos;) {
+                            steps {
+                                echo &quot;In stage Nested 1 within Branch C&quot;
+                            }
+                            /*
+                            node {
+                                jobDsl scriptText: &apos;userContent(&quot;test.txt&quot;, new ByteArrayInputStream(&quot;test&quot;.bytes))&apos;
+                            } */
+                        }
+                        stage(&apos;S2-C-2&apos;) {
+                            steps {
+                                echo &quot;In stage Nested 2 within Branch C&quot;
+                                touch file: &quot;${JENKINS_HOME}/userContent/${currentDate2}.${JOB_NAME}&quot;
+                                zip zipFile: &quot;${JENKINS_HOME}/userContent/${currentDate2}/out.zip&quot;
+                                //fail jobDsl scriptText: &apos;userContent(${currentDate2}/output.txt, new ByteArrayInputStream(output.txt))&apos;&apos;
+                                //fail sh &quot;#!/bin/bash ls ${JENKINS_HOME}/userContent&quot;
+                            }
+                        }
+                    }
+                } //S2-C
+            } //parallel
+        } //stage(&apos;S2&apos;)
+    }
+}</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

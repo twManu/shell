@@ -1,0 +1,75 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>cond1</name>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+     environment {
+        currentDate2 = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+    }
+    stages {
+        stage(&apos;parallel build1&apos;) {
+            parallel {
+                stage(&apos;In Parallel 1&apos;) {
+                    steps {
+                        echo &quot;In Parallel 1&quot;
+                        echo pwd()
+                    }
+                }
+                stage(&apos;In Parallel 2&apos;) {
+                    steps {
+                        echo &quot;In Parallel 2&quot;
+                        sh &quot;ls -la ${pwd()}&quot;
+                    }
+                }
+            }
+        }
+        stage(&apos;build2&apos;) {
+            when {
+                expression { params.cond1 }
+            }
+            steps {
+               echo &quot;cond1 is ${params.cond1}&quot;
+            }
+        }
+        stage(&apos;test&apos;) {
+            steps {
+                echo &apos;test started&apos;
+                echo &quot;${WORKSPACE}&quot;
+            }
+        }
+        stage(&apos;deploy&apos;) {
+            steps {
+                writeFile file: &quot;output.txt&quot;, text: &quot;$currentDate2&quot;
+                archiveArtifacts artifacts: &quot;output.txt&quot;
+            }
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

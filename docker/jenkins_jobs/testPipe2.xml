@@ -1,0 +1,61 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;S1&apos;) {
+            steps {
+                echo &apos;Non-Parallel Stage will be executed first.&apos;
+            }
+        }
+        stage(&apos;S2&apos;) {
+            failFast true
+            parallel {
+                stage(&apos;S2-A&apos;) {
+                    steps {
+                        echo &quot;S2-A&quot;
+                    }
+                }
+                stage(&apos;S2-B&apos;) {
+                    steps {
+                        echo &quot;S2-B&quot;
+                    }
+                }
+                stage(&apos;S2-C&apos;) {
+                    stages {
+                        stage(&apos;S2-C-1&apos;) {
+                            steps {
+                                echo &quot;In stage Nested 1 within Branch C&quot;
+                            }
+                        }
+                        stage(&apos;S2-C-2&apos;) {
+                            steps {
+                                echo &quot;In stage Nested 2 within Branch C&quot;
+                            }
+                        }
+                    }
+                } //S2-C
+            } //parallel
+        } //stage(&apos;S2&apos;)
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
