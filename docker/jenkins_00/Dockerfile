@@ -7,7 +7,7 @@
 # 00 is base
 # must have USER root to avoid apt-key or something fail
 # java -jar jenkins-cli.jar -auth <usr>:<passwd> -s http://<server> get-job <myjob> > myjob.xml
-# java -jar jenkins-cli.jar -auth <usr>:<passwd> -s http://<server> create-job <myjob> < myjob.xml
+# java -jar jenkins-cli.jar -auth manu:manu -s http://localhost:8080 create-job <myjob> < myjob.xml
 FROM jenkins/jenkins:latest
 LABEL maintainer="manuchen@home"
 LABEL version="00.00"

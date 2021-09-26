@@ -29,9 +29,9 @@
     stages {
         stage(&apos;clean downstream&apos;) {
             steps{
-                script { //avoid pipe stop
-                    try { sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/*&quot; } catch (all) {}
-                    try { sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/.*&quot; } catch (all) {}
+                script {
+                    try { sh &quot;rm -rf ${WORKSPACE}/* ${WORKSPACE}/.*&quot; }
+                    catch(all) {}
                 }
             }
         }
@@ -58,8 +58,7 @@
                     )
                     
                 }
-                //do something with it
-                //error sh &quot;#!/bin/bash ls ${WORKSPACE}&quot;
+                //add sth to output
                 sh &quot;echo ${JOB_NAME} &gt;&gt;${outfile}&quot;
             }
         }

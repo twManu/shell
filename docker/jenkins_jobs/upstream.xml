@@ -34,22 +34,17 @@
     agent any
      environment {
         dateTime = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+        date = sh(returnStdout:true, script: &quot;echo ${dateTime} | cut -f1 -d_&quot;)
         outFile = &quot;output.txt&quot;
     }
     stages {
         stage(&apos;clean upstream&apos;) {
-            when {
-                expression { params.cleanDir }
-            }
-            steps{
-                script { //avoid pipe stop
-                    try { sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/*&quot; } catch (all) {}
-                    try { sh &quot;#!/bin/bash rm -rf ${WORKSPACE}/.*&quot; } catch (all) {}
-                }
-            }
+            when { expression { params.cleanDir } }
+            steps{ sh &apos;/hello.sh&apos; }
         }
         stage(&apos;upstream build&apos;) {
             steps {
+                echo &quot;$date&quot;
                 script {
                     if ( params.target==&quot;build&quot; ) {echo &quot;upstream build with target ${params.target}&quot; }
                     else {
