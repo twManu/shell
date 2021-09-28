@@ -1,7 +1,7 @@
 # Download base image manu-jenkins:0000
 # docker build -t manu-jenkins:0100 .
 # RUN:
-#  docker run -d --name mj --user root -p 8080:8080 -p 50000:50000 -v /var/run/docker.sock:/var/run/docker.sock manu-jenkins:0100
+#  docker run -d --name mj --user root -p 8080:8080 -p 50000:50000 -v /var/run/docker.sock:/var/run/docker.sock -v <host_jenkins_home>:/var/jenkins_home manu-jenkins:0100
 # Check password: in /var/jenkins_home/secrets/initialAdminPassword
 #  docker exec -it mj /bin/bash
 # NOTE:
