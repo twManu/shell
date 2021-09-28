@@ -1,0 +1,68 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>build br1 or br</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>clean</name>
+          <description>to clean workspace or not
+1. &apos;clean&apos; will do checkout
+2.  non-clean will just build</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>stage</name>
+          <description>br1 or br accepted</description>
+          <defaultValue>br1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+    environment {
+        date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
+        dateTime = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+    }
+    stages {
+        stage(&apos;clean &amp; checkout&apos;) {
+            when { expression { params.clean } }
+            steps{
+                sh &apos;rm -rf *&apos;
+                sh &apos;git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/buildroot&apos;
+            }
+        } //cleean
+        stage(&apos;build&apos;) {
+            steps {
+                script {
+                    echo &quot;stage= ${params.stage}&quot;
+                    if ( params.stage==&quot;br&quot; || params.stage==&quot;br1&quot; ) {
+                        dir(&quot;buildroot/${params.stage}&quot;) { sh &apos;make br&apos; }
+                        if ( params.stage==&quot;br&quot;) {
+                            archiveArtifacts artifacts: &apos;buildroot/br/out/br/diff.tgz&apos;, fingerprint: true
+                        }
+                    } else { error &quot;unknown stage ${params.stage}&quot; }
+                }
+            }
+        } //build
+    }
+}</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

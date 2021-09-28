@@ -1,0 +1,104 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>br1</name>
+          <description>build br1 by default</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>br</name>
+          <description>build br (after br1) by default</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>cleanBr1</name>
+          <description>clean remote job br1</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>cleanThis</name>
+          <description>clean this workspace</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+    environment {
+        date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
+        dateTime = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+        jobBr = &quot;build_q8buildroot&quot;
+    }
+    stages {
+        stage(&apos;clean&apos;) {
+            when{ expression { params.cleanThis } }
+            steps { sh &apos;rm -rf *&apos; }
+        }
+        stage(&apos;build br1&apos;) {
+            when{ expression { params.br1 } }
+            steps {
+                script {
+                    def br1 = build(
+                        job: &quot;${jobBr}&quot;,
+                        parameters:[
+                            booleanParam(name:&apos;clean&apos;, value:${params.cleanBr1}),
+                            string(name: &apos;stage&apos;, value: &quot;br1&quot;)
+                        ]
+                    )
+                    //get build result
+                    /*
+                    copyArtifacts(
+                        projectName: &quot;${jobBr}&quot;,
+                        selector: specific(&quot;${br1.number}&quot;),
+                        target: &quot;tftp&quot;,
+                        filter: &quot;buildroot/br1/tftp/*&quot;,
+                        excludes: &quot;buildroot/br1/tftp/kernel.br1&quot;
+                    ) */
+                }
+            }
+        } //br1
+        stage(&apos;build br&apos;) {
+            when{ expression { params.br } }
+            steps {
+                script {
+                    def br = build(
+                        job: &quot;${jobBr}&quot;,
+                        parameters:[
+                            booleanParam(name:&apos;clean&apos;, value:false),
+                            string(name: &apos;stage&apos;, value: &quot;br&quot;)
+                        ]
+                    )
+                    //get build result
+                    copyArtifacts(
+                        projectName: &quot;${jobBr}&quot;,
+                        selector: specific(&quot;${br.number}&quot;),
+                        target: &quot;tftp&quot;,
+                        filter: &quot;buildroot/br/out/br/diff.tgz&quot;
+                    )
+                }
+            }
+        }
+    }
+}</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
