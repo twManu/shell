@@ -19,6 +19,6 @@ LABEL version="01.00"
 LABEL description="jenkins for Q8Vista"
 USER root
 ENV VER=1.14.15
-ENV APP="make autoconf automake autopoint bison flex gperf libtool libtool-bin libtool lzip p7zip-full intltool-debian intltool libgtk2.0-dev python ruby npm wget cpio rsync bc gcc-mingw-w64 g++-mingw-w64 libssl-dev"
+ENV APP="make autoconf automake autopoint bison flex gperf libtool libtool-bin libtool lzip p7zip-full intltool-debian intltool libgtk2.0-dev python ruby npm wget cpio rsync bc gcc-mingw-w64 g++-mingw-w64 libssl-dev libelf-dev gtk-doc-tools"
 RUN apt-get update && apt-get -y install $APP
 RUN wget -c https://dl.google.com/go/go${VER}.linux-amd64.tar.gz -O - | tar -xz -C /usr/local && echo "export GOROOT=/usr/local/go" >>~/.bashrc && echo "export PATH=\${PATH}:\${GOROOT}/bin" >>~/.bashrc
