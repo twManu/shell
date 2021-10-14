@@ -12,20 +12,35 @@
   <description>build br1 or br</description>
   <keepDependencies>false</keepDependencies>
   <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>3</daysToKeep>
+        <numToKeep>10</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
     <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.BooleanParameterDefinition>
-          <name>clean</name>
-          <description>to clean workspace or not
+          <name>cleanBeforeBuild</name>
+          <description>to clean workspace before build
 1. &apos;clean&apos; will do checkout
 2.  non-clean will just build</description>
-          <defaultValue>false</defaultValue>
+          <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>stage</name>
-          <description>br1 or br accepted</description>
+          <description>br1 or br accepted
+Note that clean build of br will build br1 first</description>
           <defaultValue>br1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>target</name>
+          <description>build target</description>
+          <defaultValue>br</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -36,11 +51,15 @@
     agent any
     environment {
         date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
-        dateTime = sh(returnStdout: true, script: &apos;date +%Y%m%d_%H%M&apos;).trim()
+        time = sh(returnStdout: true, script: &apos;date +%H%M&apos;).trim()
+        keepDirP = &quot;${JENKINS_HOME}/userContent/${date}&quot;
+        keepDir = &quot;${keepDirP}/${time}&quot;
+        outDiff = &quot;tftp/diff.tgz&quot;
+        outKern = &quot;tftp/kernel&quot;
     }
     stages {
         stage(&apos;clean &amp; checkout&apos;) {
-            when { expression { params.clean } }
+            when { expression { params.cleanBeforeBuild } }
             steps{
                 sh &apos;rm -rf *&apos;
                 sh &apos;git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/buildroot&apos;
@@ -50,9 +69,31 @@
             steps {
                 script {
                     echo &quot;stage= ${params.stage}&quot;
-                    if ( params.stage==&quot;br&quot; || params.stage==&quot;br1&quot; ) {
-                        dir(&quot;buildroot/${params.stage}&quot;) { sh &apos;make br&apos; }
-                    } else { error &quot;unknown stage ${params.stage}&quot; }
+                    if ( params.stage==&quot;br&quot; ) {
+                        dir(&quot;buildroot/br&quot;) {
+                            sh &quot;make ${params.target}&quot;
+                            def exists = fileExists &quot;${outDiff}&quot;
+                            if (exists) {
+                                echo &quot;copy diff.tgz to userContent&quot;
+                                //symbolic link is hiden
+                                sh &quot;mkdir -p ${keepDir}; cp -a ${outDiff} ${keepDir}; cp -a ${outDiff} ${keepDirP}&quot;
+                                dir(&quot;../br1&quot;) {
+                                    sh &quot;cp -a ${outKern} ${keepDir}; cp -a ${outKern} ${keepDirP}&quot;
+                                }
+                            }
+                        } //buildroot/br
+                    } else {
+                        if ( params.stage==&quot;br1&quot; ) {
+                            dir(&quot;buildroot/br1&quot;) {
+                                sh &quot;make ${params.target}&quot;
+                                def exists = fileExists &quot;${outKern}&quot;
+                                if (exists) {
+                                    echo &quot;copy kernel to userContent&quot;
+                                    sh &quot;mkdir -p ${keepDir}; cp -a ${outKern} ${keepDir}; cp -a ${outKern} ${keepDirP}&quot;
+                                }
+                            }
+                        } else { error &quot;unknown stage ${params.stage}&quot; }
+                    }
                 }
             }
         } //build
