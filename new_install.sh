@@ -177,6 +177,21 @@ do_smb()
 	fi
 }
 
+#since alias takes no parameter, use function instead
+function ssh20() {
+	NET=192.168.20
+	if [ $# -lt 1 ]; then
+		echo Usage: ssh20 LAST_IP [USER]
+		echo "   ssh root@${NET}.LAST_IP by default"
+	else
+		USER=root
+		test -n "$2" && USER=$2
+		echo ssh ${USER}@${NET}.$1
+		ssh ${USER}@${NET}.$1
+        fi
+}
+
+
 #NOTE:
 #1.the mount.cifs uid=<uid#>, the user name becames unavailable after 11.10
 #2.the ia32-libs fails x86 installation
