@@ -122,6 +122,13 @@ do_app_install()
 
 	sudo apt-get -y install $APPLIST
 	check_app
+	cat >~.vimrc <<EOF
+	syntax enable
+	set smartindent
+	set tabstop=4
+	set shiftwidth=4
+	set noexpandtab
+	EOF
 }
 
 
