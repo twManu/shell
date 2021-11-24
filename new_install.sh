@@ -177,20 +177,37 @@ do_smb()
 	fi
 }
 
+function echoCmd() {
+	[ -n "$1" ] && {
+		echo "$1"
+		eval "$1"
+	}
+}
+
 #since alias takes no parameter, use function instead
 function ssh20() {
+	doDel=
 	NET=192.168.20
 	if [ $# -lt 1 ]; then
 		echo Usage: ssh20 LAST_IP [USER]
 		echo "   ssh root@${NET}.LAST_IP by default"
 	else
 		USER=root
-		test -n "$2" && USER=$2
-		echo ssh ${USER}@${NET}.$1
-		ssh ${USER}@${NET}.$1
-        fi
+		[ -n "$2" -a "$2" == "-d" ] && doDel=yes
+		if [ -n "${doDel}" ]; then
+			# try to kill existing ssh end with $1
+			curSSH=`ps aux | grep ssh | egrep "$1\$" | awk '{ print $2 }'`
+			curSSHcount=`echo ${curSSH} | wc -l`
+			echo "found ${curSSHcount} ssh process:"
+			for line in ${curSSH}; do
+				id=`echo ${line} | sed -e s/[^0-9]//g`
+				echoCmd "kill -9 ${id}"
+			done
+		fi
+		ssh-keygen -f "/home/oem/.ssh/known_hosts" -R "${NET}.$1"
+		echoCmd "ssh ${USER}@${NET}.$1"
+	fi
 }
-
 
 #NOTE:
 #1.the mount.cifs uid=<uid#>, the user name becames unavailable after 11.10
