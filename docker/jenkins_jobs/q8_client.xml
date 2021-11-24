@@ -35,7 +35,7 @@
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
     <hudson.triggers.SCMTrigger>
-      <spec></spec>
+      <spec>H/2 * * * *</spec>
       <ignorePostCommitHooks>false</ignorePostCommitHooks>
     </hudson.triggers.SCMTrigger>
   </triggers>
@@ -43,9 +43,17 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
+DATE=`date +%Y%m%d`
+OUTDIR=${JENKINS_HOME}/userContent/${DATE}
+OUTFILE=client/out/q8client
 export GOROOT=/usr/local/go
 export PATH=${PATH}:${GOROOT}/bin
-make -C client q8client</command>
+echo HOME=${HOME}
+make -C client q8client
+test -f ${OUTFILE} &amp;&amp; {
+	mkdir -p ${OUTDIR}/q8
+    cp ${OUTFILE} ${OUTDIR}/q8
+}</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
   </builders>

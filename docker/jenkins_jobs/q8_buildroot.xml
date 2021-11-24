@@ -9,7 +9,7 @@
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
   </actions>
-  <description>build br1 or br</description>
+  <description>build br1 or br (br is now edge since 2021.11.05)</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -32,16 +32,19 @@
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>stage</name>
-          <description>br1 or br accepted
-Note that clean build of br will build br1 first</description>
+          <description>br1 or br
+br1 has target br
+br has target edge or q8</description>
           <defaultValue>br1</defaultValue>
-          <trim>false</trim>
+          <trim>true</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>target</name>
-          <description>build target</description>
-          <defaultValue>br</defaultValue>
-          <trim>false</trim>
+          <description>build target has edge or q8
+edge for edge to generate rootfs.tar(.xz) and bzImage
+q8 for q8client to generate diff.tgz</description>
+          <defaultValue>edge</defaultValue>
+          <trim>true</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
@@ -54,13 +57,16 @@ Note that clean build of br will build br1 first</description>
         time = sh(returnStdout: true, script: &apos;date +%H%M&apos;).trim()
         keepDirP = &quot;${JENKINS_HOME}/userContent/${date}&quot;
         keepDir = &quot;${keepDirP}/${time}&quot;
-        outDiff = &quot;tftp/diff.tgz&quot;
+        outTar = &quot;out/br/output/images/rootfs.tar&quot;
+        edgeKern = &quot;out/br/output/images/bzImage&quot;
         outKern = &quot;tftp/kernel&quot;
+        outDiff = &quot;tftp/diff.tgz&quot;
     }
     stages {
         stage(&apos;clean &amp; checkout&apos;) {
             when { expression { params.cleanBeforeBuild } }
             steps{
+                echo &quot;HOME=${HOME}&quot;
                 sh &apos;rm -rf *&apos;
                 sh &apos;git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/buildroot&apos;
             }
@@ -72,15 +78,26 @@ Note that clean build of br will build br1 first</description>
                     if ( params.stage==&quot;br&quot; ) {
                         dir(&quot;buildroot/br&quot;) {
                             sh &quot;make ${params.target}&quot;
-                            def exists = fileExists &quot;${outDiff}&quot;
-                            if (exists) {
-                                echo &quot;copy diff.tgz to userContent&quot;
-                                //symbolic link is hiden
-                                sh &quot;mkdir -p ${keepDir}; cp -a ${outDiff} ${keepDir}; cp -a ${outDiff} ${keepDirP}&quot;
-                                dir(&quot;../br1&quot;) {
-                                    sh &quot;cp -a ${outKern} ${keepDir}; cp -a ${outKern} ${keepDirP}&quot;
+                            if ( params.target==&quot;edge&quot; ) {
+                                def exists = fileExists &quot;${outTar}&quot;
+                                if (exists) {
+                                    sh &quot;xz -zf ${outTar}&quot;
+                                    echo &quot;copy ${outTar}.xz to userContent&quot;
+                                    //symbolic link is hiden
+                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/edge; cp -a ${outTar}.xz ${keepDir}; cp -a ${outTar}.xz ${keepDirP}/edge&quot;
                                 }
-                            }
+                                def exists2 = fileExists &quot;${edgeKern}&quot;
+                                if (exists2) {
+                                    echo &quot;copy ${edgeKern} to userContent&quot;
+                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/edge; cp -a ${edgeKern} ${keepDir}; cp -a ${edgeKern} ${keepDirP}/edge&quot;
+                                }
+                            } else { //params.target==&quot;edge&quot;, i.e q8
+                                def exists = fileExists &quot;${outDiff}&quot;
+                                if (exists) {
+                                    echo &quot;copy ${outDiff} to userContent&quot;
+                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/q8; cp -a ${outDiff} ${keepDir}; cp -a ${outDiff} ${keepDirP}/q8&quot;
+                                }
+                            } //params.target==&quot;edge&quot;
                         } //buildroot/br
                     } else {
                         if ( params.stage==&quot;br1&quot; ) {
@@ -89,7 +106,11 @@ Note that clean build of br will build br1 first</description>
                                 def exists = fileExists &quot;${outKern}&quot;
                                 if (exists) {
                                     echo &quot;copy kernel to userContent&quot;
-                                    sh &quot;mkdir -p ${keepDir}; cp -a ${outKern} ${keepDir}; cp -a ${outKern} ${keepDirP}&quot;
+                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/q8; cp -a ${outKern} ${keepDir}; cp -a ${outKern} ${keepDirP}/q8&quot;
+                                }
+                                def br1Files = [&apos;tftp/default&apos;, &apos;tftp/acpboot.bin&apos;, &apos;tftp/ldlinux.c32&apos;]
+                                for (int i = 0; i &lt; br1Files.size(); ++i) {
+                                    sh &quot;mkdir -p ${keepDirP}; cp -a ${br1Files[i]} ${keepDirP}/q8&quot;
                                 }
                             }
                         } else { error &quot;unknown stage ${params.stage}&quot; }

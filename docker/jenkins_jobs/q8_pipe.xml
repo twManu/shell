@@ -61,7 +61,7 @@
                 }
             }
         } //br1
-        stage(&apos;build br&apos;) {
+        stage(&apos;build edge&apos;) {
             steps {
                 script {
                     def br = build(
@@ -69,12 +69,26 @@
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:false),
                             string(name: &apos;stage&apos;, value: &quot;br&quot;),
-                            string(name: &apos;target&apos;, value: &quot;br&quot;)
+                            string(name: &apos;target&apos;, value: &quot;edge&quot;)
                         ]
                     )
                 }
             }
-        } //br
+        } //edge
+        stage(&apos;build q8&apos;) {  //edge move i915 driver to /root, do after edge
+            steps {
+                script {
+                    def br = build(
+                        job: &quot;${job8b}&quot;,
+                        parameters:[
+                            booleanParam(name:&apos;cleanBeforeBuild&apos;, value:false),
+                            string(name: &apos;stage&apos;, value: &quot;br&quot;),
+                            string(name: &apos;target&apos;, value: &quot;q8&quot;)
+                        ]
+                    )
+                }
+            }
+        } //q8
         stage(&apos;build server&apos;) {
             steps {
                 script {
