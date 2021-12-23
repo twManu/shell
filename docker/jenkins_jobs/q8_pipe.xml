@@ -21,6 +21,28 @@
       </strategy>
     </jenkins.model.BuildDiscarderProperty>
     <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_br1</name>
+          <description>to build br1 or not, clean by default</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_br</name>
+          <description>not clean, just build</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_client</name>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_server</name>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
       <triggers>
         <hudson.triggers.TimerTrigger>
@@ -32,67 +54,48 @@
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
     <script>pipeline {
     agent any
-    environment {
-        date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
-        time = sh(returnStdout: true, script: &apos;date +%H%M&apos;).trim()
-        job8b = &quot;q8_buildroot&quot;
-        job8c = &quot;q8_client&quot;
-        job8s = &quot;q8_server&quot;
-    }
     stages {
         stage(&apos;build client&apos;) {
+            when{ expression {params.build_client} }
             steps {
                 script {
-                    def br = build(job: &quot;${job8c}&quot;)
+                    def br = build(job: &quot;q8_client&quot;)
                 }
             }
         } //build client
         stage(&apos;build br1&apos;) {
+            when{ expression {params.build_br1} }
             steps {
                 script {
                     def br = build(
-                        job: &quot;${job8b}&quot;,
+                        job: &quot;q8_buildroot&quot;,
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
-                            string(name: &apos;stage&apos;, value: &quot;br1&quot;),
-                            string(name: &apos;target&apos;, value: &quot;br&quot;)
+                            string(name: &apos;stage&apos;, value: &quot;br1&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;)
                         ]
                     )
                 }
             }
         } //br1
-        stage(&apos;build edge&apos;) {
+        stage(&apos;build br&apos;) {  //edge move i915 driver to /root, do after edge
+            when{ expression {params.build_br} }
             steps {
                 script {
                     def br = build(
-                        job: &quot;${job8b}&quot;,
+                        job: &quot;q8_buildroot&quot;,
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:false),
-                            string(name: &apos;stage&apos;, value: &quot;br&quot;),
-                            string(name: &apos;target&apos;, value: &quot;edge&quot;)
-                        ]
-                    )
-                }
-            }
-        } //edge
-        stage(&apos;build q8&apos;) {  //edge move i915 driver to /root, do after edge
-            steps {
-                script {
-                    def br = build(
-                        job: &quot;${job8b}&quot;,
-                        parameters:[
-                            booleanParam(name:&apos;cleanBeforeBuild&apos;, value:false),
-                            string(name: &apos;stage&apos;, value: &quot;br&quot;),
-                            string(name: &apos;target&apos;, value: &quot;q8&quot;)
+                            string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;)
                         ]
                     )
                 }
             }
         } //q8
         stage(&apos;build server&apos;) {
+            when{ expression {params.build_server} }
             steps {
                 script {
-                    def br = build(job: &quot;${job8s}&quot;)
+                    def br = build(job: &quot;q8_server&quot;)
                 }
             }
         } //build server

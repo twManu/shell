@@ -1,0 +1,174 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>build whole edge project daily</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>3</daysToKeep>
+        <numToKeep>10</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_be</name>
+          <description>whether to build be</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_fe</name>
+          <description>whether to build fe</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>branch</name>
+          <description>blank for master
+xxxx means edge_xxxx</description>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>build_br</name>
+          <description>whether to build buildroot</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <hudson.triggers.TimerTrigger>
+          <spec>H(0-10) 4 * * *</spec>
+        </hudson.triggers.TimerTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+    environment {
+        date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
+        repo = &quot;${JENKINS_HOME}/userContent&quot;
+        SERVER = &quot;jenkins@172.17.0.1&quot;
+        R_HOME = &quot;/home/jenkins&quot;
+        R_BE_DIR = &quot;${R_HOME}/backend/be/out&quot;
+        R_FE_DIR = &quot;${R_HOME}/frontend/fe&quot;
+        R_SYS_SUBDIR = &quot;sys/sys&quot;
+    }
+    stages {
+        stage(&apos;build BE&apos;) {
+            when{ expression {params.build_be} }
+            steps {
+                script {
+                    def br = build(
+                                job: &quot;edge_be&quot;,
+                                parameters:[
+                                    string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
+                                ]
+                    )
+                }
+            }
+        } //build BE
+        stage(&apos;build FE&apos;) {
+            when{ expression {params.build_fe} }
+            steps {
+                script {
+                    def br = build(
+                                job: &quot;edge_fe&quot;,
+                                parameters:[
+                                    string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
+                                ]
+                    )
+                }
+            }
+        } //build FE
+        stage(&apos;build BR&apos;) {
+            when{ expression {params.build_br} }
+            steps {
+                script {
+                    if ( &quot;${params.branch}&quot;==&quot;&quot; ) {
+                        def br = build(
+                            job: &quot;q8_buildroot&quot;,
+                            parameters:[
+                                booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
+                                string(name: &apos;stage&apos;, value: &quot;br&quot;),
+                                string(name: &apos;target&apos;, value: &quot;edge&quot;)
+                            ]
+                        )
+                    } else {
+                        def br = build(
+                            job: &quot;q8_buildroot&quot;,
+                            parameters:[
+                                booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
+                                string(name: &apos;stage&apos;, value: &quot;br&quot;),
+                                string(name: &apos;target&apos;, value: &quot;edge&quot;),
+                                string(name: &apos;branch&apos;, value: &quot;edge_${params.branch}&quot;)
+                            ]
+                        )
+                    }
+                }
+            }
+        } //edge
+        stage(&apos;build SYS&apos;) {
+            steps {
+                script {
+                    if ( params.branch==&quot;&quot; ) {
+                        env.repoRoot = &quot;${repo}/${date}/edge&quot;
+                    } else {
+                        env.repoRoot = &quot;${repo}/edge/${params.branch}&quot;
+                    }
+                    echo &quot;repoRoot=${repoRoot}&quot;
+                    def kernel_exists = fileExists &quot;${repoRoot}/bzImage&quot;
+                    def rootfs_exists = fileExists &quot;${repoRoot}/rootfs.tar.xz&quot;
+                    if (kernel_exists &amp;&amp; rootfs_exists) {
+                        //cleanup
+                        sh &apos;rm -rf *&apos;
+                        sh &apos;ssh ${SERVER} &quot;sudo rm -rf ${R_HOME}/backend ${R_HOME}/frontend ${R_HOME}/sys /tmp/bzImage /tmp/rootfs*; mkdir -p ${R_BE_DIR} ${R_FE_DIR}&quot;&apos;
+                        echo &quot;Done Cleanup&quot;
+                        //deploy component
+                        sh &apos;scp ${repoRoot}/be ${SERVER}:${R_BE_DIR}&apos;
+                        sh &apos;scp ${repoRoot}/www.tgz ${SERVER}:${R_FE_DIR}&apos;
+                        sh &apos;scp ${repoRoot}/bzImage ${SERVER}:/tmp&apos;
+                        sh &apos;scp ${repoRoot}/rootfs.tar.xz ${SERVER}:/tmp&apos;
+                        sh &apos;ssh ${SERVER} &quot;cd ${R_FE_DIR}; tar -xf www.tgz; cd /tmp; xz -d rootfs.tar.xz&quot;&apos;
+                        //get source
+                        sh &apos;ssh ${SERVER} &quot;git clone ssh://q8@192.168.1.123/home/q8/Q8_edge/bare/system `dirname ${R_SYS_SUBDIR}`&quot;&apos;
+                        if ( params.branch==&quot;&quot; ) {
+                            sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_SUBDIR}; make jenkins-edge&quot;&apos;
+                        } else {
+                            sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_SUBDIR}; git checkout edge_${params.branch}; make jenkins-edge&quot;&apos;
+                        }
+                        sh &apos;scp ${SERVER}:${R_HOME}/${R_SYS_SUBDIR}/out/images/edge.img.xz ${repoRoot}&apos;
+                        env.ckPoint = sh (
+                            script: &apos;ssh ${SERVER} &quot;cd ${R_SYS_SUBDIR}; git log | head -n1 | cut -f2 -d \&apos; \&apos;&quot;&apos;,
+                            returnStdout: true
+                        ).trim()
+                        //I believe dir created
+                        sh &apos;echo &quot;sys ${ckPoint}&quot; &gt;&gt;${repoRoot}/commit.txt&apos;
+                    }
+                }
+            }
+        } //build FE
+    } //stages
+    post() {
+        always {
+            cleanWs()
+        }
+    }
+} //pipeline</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

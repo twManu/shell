@@ -1,0 +1,54 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>copy stuff from certain date to release</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>project</name>
+          <description>to move artifact of given project</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>edge</string>
+              <string>q8</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>date</name>
+          <description>date is YYYYMMDD as stored in userContent. Leave it blank to use build today.</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+DATE=`date +%Y%m%d`
+[ -n &quot;${date}&quot; ] &amp;&amp; DATE=${date}
+
+SRC_DIR=${JENKINS_HOME}/userContent/${DATE}/${project}
+DST_DIR=${JENKINS_HOME}/userContent/release/${project}
+if [ -d ${SRC_DIR} ]; then
+	echo &quot;copy ${SRC_DIR} to ${DST_DIR}&quot;
+	rm -rf ${DST_DIR}/*
+	cp -a ${SRC_DIR}/* ${DST_DIR}
+else
+	echo &quot;${SRC_DIR} doesn&apos;t exist&quot;
+fi</command>
+      <configuredLocalRules/>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

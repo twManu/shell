@@ -41,9 +41,18 @@ br has target edge or q8</description>
         <hudson.model.StringParameterDefinition>
           <name>target</name>
           <description>build target has edge or q8
-edge for edge to generate rootfs.tar(.xz) and bzImage
-q8 for q8client to generate diff.tgz</description>
+target=edge, stage=br to generate rootfs.tar(.xz) and bzImage
+target=q8 stage=br1 to generate q8 stage1
+target=q8 stage=br to generate diff.tgz</description>
           <defaultValue>edge</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>branch</name>
+          <description>blank means master or
+full branch name must be provided
+ say, edge_v15 or q8_v12
+</description>
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -54,9 +63,11 @@ q8 for q8client to generate diff.tgz</description>
     agent any
     environment {
         date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
-        time = sh(returnStdout: true, script: &apos;date +%H%M&apos;).trim()
-        keepDirP = &quot;${JENKINS_HOME}/userContent/${date}&quot;
-        keepDir = &quot;${keepDirP}/${time}&quot;
+        //keepDirPP/$date/edge
+        //keepDirPP/$date/q8
+        //keepDirPP/edge/$branch
+        //keepDirPP/q8/$branch
+        keepDirPP = &quot;${JENKINS_HOME}/userContent&quot;
         outTar = &quot;out/br/output/images/rootfs.tar&quot;
         edgeKern = &quot;out/br/output/images/bzImage&quot;
         outKern = &quot;tftp/kernel&quot;
@@ -66,38 +77,54 @@ q8 for q8client to generate diff.tgz</description>
         stage(&apos;clean &amp; checkout&apos;) {
             when { expression { params.cleanBeforeBuild } }
             steps{
-                echo &quot;HOME=${HOME}&quot;
-                sh &apos;rm -rf *&apos;
-                sh &apos;git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/buildroot&apos;
+                script {
+                    echo &quot;HOME=${HOME}&quot;
+                    sh &apos;rm -rf *; git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/buildroot&apos;
+                    if ( params.branch!=&quot;&quot; ) {
+                        sh &apos;cd buildroot; git checkout ${params.branch}&apos;
+                    }
+                }
             }
         } //cleean
         stage(&apos;build&apos;) {
             steps {
                 script {
                     echo &quot;stage= ${params.stage}&quot;
+                    env.ckPoint = sh (
+                        script: &apos;cd buildroot; git log | head -n1 | cut -f2 -d \&apos; \&apos;&apos;,
+                        returnStdout: true
+                    ).trim()
+                    //determine where to save artifact
+                    if ( params.branch==&quot;&quot; ) {
+                        env.keepDir = &quot;${keepDirPP}/${date}/${params.target}&quot;
+                    } else {
+                        env.keepDirP = &quot;${keepDirPP}/${params.target}&quot;
+                        env.keepDir = sh(returnStdout: true, script: &apos;echo ${params.branch} | cut -f2 -d \&apos;_\&apos;&apos;).trim()
+                        env.keepDir = &quot;${keepDirP}/${keepDir}&quot;
+                    }
+                    sh &apos;mkdir -p ${keepDir}&apos;
                     if ( params.stage==&quot;br&quot; ) {
                         dir(&quot;buildroot/br&quot;) {
                             sh &quot;make ${params.target}&quot;
                             if ( params.target==&quot;edge&quot; ) {
                                 def exists = fileExists &quot;${outTar}&quot;
                                 if (exists) {
-                                    sh &quot;xz -zf ${outTar}&quot;
-                                    echo &quot;copy ${outTar}.xz to userContent&quot;
                                     //symbolic link is hiden
-                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/edge; cp -a ${outTar}.xz ${keepDir}; cp -a ${outTar}.xz ${keepDirP}/edge&quot;
+                                    sh &quot;xz -zf ${outTar}; cp -a ${outTar}.xz ${keepDir}&quot;
                                 }
                                 def exists2 = fileExists &quot;${edgeKern}&quot;
                                 if (exists2) {
-                                    echo &quot;copy ${edgeKern} to userContent&quot;
-                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/edge; cp -a ${edgeKern} ${keepDir}; cp -a ${edgeKern} ${keepDirP}/edge&quot;
+                                    sh &quot;cp -a ${edgeKern} ${keepDir}&quot;
+                                    sh &apos;echo &quot;${params.stage} ${ckPoint}&quot; &gt;&gt;${keepDir}/commit.txt&apos;
                                 }
                             } else { //params.target==&quot;edge&quot;, i.e q8
                                 def exists = fileExists &quot;${outDiff}&quot;
                                 if (exists) {
-                                    echo &quot;copy ${outDiff} to userContent&quot;
-                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/q8; cp -a ${outDiff} ${keepDir}; cp -a ${outDiff} ${keepDirP}/q8&quot;
+                                    sh &quot;cp -a ${outDiff} ${keepDir}&quot;
+                                    sh &apos;echo &quot;${params.stage} ${ckPoint}&quot; &gt;&gt;${keepDir}/commit.txt&apos;
                                 }
                             } //params.target==&quot;edge&quot;
+                            
                         } //buildroot/br
                     } else {
                         if ( params.stage==&quot;br1&quot; ) {
@@ -105,12 +132,12 @@ q8 for q8client to generate diff.tgz</description>
                                 sh &quot;make ${params.target}&quot;
                                 def exists = fileExists &quot;${outKern}&quot;
                                 if (exists) {
-                                    echo &quot;copy kernel to userContent&quot;
-                                    sh &quot;mkdir -p ${keepDir} ${keepDirP}/q8; cp -a ${outKern} ${keepDir}; cp -a ${outKern} ${keepDirP}/q8&quot;
+                                    sh &quot;cp -a ${outKern} ${keepDir}&quot;
+                                    sh &apos;echo &quot;${params.stage} ${ckPoint}&quot; &gt;&gt;${keepDir}/commit.txt&apos;
                                 }
                                 def br1Files = [&apos;tftp/default&apos;, &apos;tftp/acpboot.bin&apos;, &apos;tftp/ldlinux.c32&apos;]
                                 for (int i = 0; i &lt; br1Files.size(); ++i) {
-                                    sh &quot;mkdir -p ${keepDirP}; cp -a ${br1Files[i]} ${keepDirP}/q8&quot;
+                                    sh &quot;cp -a ${br1Files[i]} ${keepDir}&quot;
                                 }
                             }
                         } else { error &quot;unknown stage ${params.stage}&quot; }

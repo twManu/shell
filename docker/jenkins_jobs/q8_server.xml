@@ -44,6 +44,15 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 DATE=`date +%Y%m%d`
+if [ -n &quot;${branch}&quot; ]; then
+	COMMIT=${JENKINS_HOME}/userContent/edge/${branch}/commit.txt
+    git checkout edge_${branch}
+else
+	COMMIT=${JENKINS_HOME}/userContent/${DATE}/edge/commit.txt
+fi
+mkdir -p `dirname ${COMMIT}`
+tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
+echo server ${tag} &gt;&gt; ${COMMIT}
 OUTDIR=${JENKINS_HOME}/userContent/${DATE}
 OUTFILES=&quot;server/out/q8srv server/out/q8srv.exe server/out/q8s.db&quot;
 export GOROOT=/usr/local/go
@@ -69,20 +78,13 @@ done
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
-    <hudson.plugins.ws__cleanup.WsCleanup plugin="ws-cleanup@0.39">
-      <patterns class="empty-list"/>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.39">
       <deleteDirs>false</deleteDirs>
-      <skipWhenFailed>false</skipWhenFailed>
-      <cleanWhenSuccess>true</cleanWhenSuccess>
-      <cleanWhenUnstable>true</cleanWhenUnstable>
-      <cleanWhenFailure>true</cleanWhenFailure>
-      <cleanWhenNotBuilt>true</cleanWhenNotBuilt>
-      <cleanWhenAborted>true</cleanWhenAborted>
-      <notFailBuild>false</notFailBuild>
-      <cleanupMatrixParent>false</cleanupMatrixParent>
+      <cleanupParameter></cleanupParameter>
       <externalDelete></externalDelete>
       <disableDeferredWipeout>false</disableDeferredWipeout>
-    </hudson.plugins.ws__cleanup.WsCleanup>
-  </publishers>
-  <buildWrappers/>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
 </project>

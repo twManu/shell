@@ -1,7 +1,7 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>build q8server</description>
+  <description>just echo repository commit point</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -17,7 +17,7 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <url>ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/Q8client</url>
+        <url>ssh://q8@192.168.1.123/home/q8/Q8_edge/bare/system</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
@@ -30,50 +30,28 @@
     <extensions/>
   </scm>
   <canRoam>true</canRoam>
-  <disabled>false</disabled>
+  <disabled>true</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
-    <hudson.triggers.SCMTrigger>
-      <spec>H/2 * * * *</spec>
-      <ignorePostCommitHooks>false</ignorePostCommitHooks>
-    </hudson.triggers.SCMTrigger>
+    <hudson.triggers.TimerTrigger>
+      <spec>H(0-10) 4 * * *</spec>
+    </hudson.triggers.TimerTrigger>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 DATE=`date +%Y%m%d`
-if [ -n &quot;${branch}&quot; ]; then
-	COMMIT=${JENKINS_HOME}/userContent/edge/${branch}/commit.txt
-    git checkout edge_${branch}
-else
-	COMMIT=${JENKINS_HOME}/userContent/${DATE}/edge/commit.txt
-fi
+COMMIT=${JENKINS_HOME}/userContent/${DATE}/edge/commit.txt
 mkdir -p `dirname ${COMMIT}`
 tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
-echo client ${tag} &gt;&gt; ${COMMIT}
-
-OUTDIR=${JENKINS_HOME}/userContent/${DATE}
-OUTFILE=client/out/q8client
-export GOROOT=/usr/local/go
-export PATH=${PATH}:${GOROOT}/bin
-echo HOME=${HOME}
-make -C client q8client
-test -f ${OUTFILE} &amp;&amp; {
-	mkdir -p ${OUTDIR}/q8
-    cp ${OUTFILE} ${OUTDIR}/q8
-}</command>
+echo sys ${tag} &gt;&gt; ${COMMIT}
+#touch ${JENKINS_HOME}/userContent/${DATE}/edge/${tag}.system</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <hudson.tasks.Mailer plugin="mailer@1.34">
-      <recipients>manu.chen@aristaipc.com wade.chen@aristaipc.com</recipients>
-      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-      <sendToIndividuals>false</sendToIndividuals>
-    </hudson.tasks.Mailer>
-  </publishers>
+  <publishers/>
   <buildWrappers>
     <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.39">
       <deleteDirs>false</deleteDirs>

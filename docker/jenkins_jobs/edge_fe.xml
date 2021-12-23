@@ -1,7 +1,7 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>build q8server</description>
+  <description>build edge fe</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -12,12 +12,22 @@
         <artifactNumToKeep>-1</artifactNumToKeep>
       </strategy>
     </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>branch</name>
+          <description>blank means master
+otherwise xxxx means edge_xxxx</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@4.8.2">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <url>ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/Q8client</url>
+        <url>ssh://q8@192.168.1.123/home/q8/Q8_edge/bare/frontend</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
@@ -52,28 +62,27 @@ else
 fi
 mkdir -p `dirname ${COMMIT}`
 tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
-echo client ${tag} &gt;&gt; ${COMMIT}
+echo fe ${tag} &gt;&gt; ${COMMIT}
+
 
 OUTDIR=${JENKINS_HOME}/userContent/${DATE}
-OUTFILE=client/out/q8client
-export GOROOT=/usr/local/go
-export PATH=${PATH}:${GOROOT}/bin
-echo HOME=${HOME}
-make -C client q8client
-test -f ${OUTFILE} &amp;&amp; {
-	mkdir -p ${OUTDIR}/q8
-    cp ${OUTFILE} ${OUTDIR}/q8
-}</command>
+OUTFILE=www
+CHECK=${OUTFILE}/assets/index.js
+cd fe
+echo pwd=`pwd`
+npm i
+#some warning leads make return non-0
+#make; tar czf ${OUTFILE}.tgz ${OUTFILE}
+make
+tar czf ${OUTFILE}.tgz ${OUTFILE}
+[ ! -f ${CHECK} ] &amp;&amp; exit 1
+mkdir -p ${OUTDIR}/edge
+cp -a ${OUTFILE}.tgz ${OUTDIR}/edge
+</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <hudson.tasks.Mailer plugin="mailer@1.34">
-      <recipients>manu.chen@aristaipc.com wade.chen@aristaipc.com</recipients>
-      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-      <sendToIndividuals>false</sendToIndividuals>
-    </hudson.tasks.Mailer>
-  </publishers>
+  <publishers/>
   <buildWrappers>
     <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.39">
       <deleteDirs>false</deleteDirs>
