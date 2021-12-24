@@ -46,7 +46,7 @@
 DATE=`date +%Y%m%d`
 if [ -n &quot;${branch}&quot; ]; then
 	COMMIT=${JENKINS_HOME}/userContent/q8/${branch}/commit.txt
-    git checkout edge_${branch}
+    git checkout q8_${branch}
 else
 	COMMIT=${JENKINS_HOME}/userContent/${DATE}/q8/commit.txt
 fi

@@ -57,17 +57,17 @@ xxxx means edge_xxxx
       <command>#!/bin/bash
 DATE=`date +%Y%m%d`
 if [ -n &quot;${branch}&quot; ]; then
-	COMMIT=${JENKINS_HOME}/userContent/edge/${branch}/commit.txt
+    OUTDIR=${JENKINS_HOME}/userContent/edge/${branch}
     git checkout edge_${branch}
 else
-	COMMIT=${JENKINS_HOME}/userContent/${DATE}/edge/commit.txt
+    OUTDIR=${JENKINS_HOME}/userContent/${DATE}/edge
 fi
+COMMIT=${OUTDIR}/commit.txt
 mkdir -p `dirname ${COMMIT}`
 tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
 echo be ${tag} &gt;&gt; ${COMMIT}
 
 
-OUTDIR=${JENKINS_HOME}/userContent/${DATE}
 OUTFILE=be/out/be
 export GOROOT=/usr/local/go
 export PATH=${PATH}:${GOROOT}/bin
@@ -75,8 +75,8 @@ export PATH=${PATH}:${GOROOT}/bin
 
 make -C be
 test -f ${OUTFILE} &amp;&amp; {
-	mkdir -p ${OUTDIR}/edge
-    cp ${OUTFILE} ${OUTDIR}/edge
+	mkdir -p ${OUTDIR}
+    cp ${OUTFILE} ${OUTDIR}
 }</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>

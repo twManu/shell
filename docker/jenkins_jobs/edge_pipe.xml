@@ -44,6 +44,10 @@ xxxx means edge_xxxx</description>
           <description>whether to build buildroot</description>
           <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>cleanBr</name>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
@@ -101,18 +105,16 @@ xxxx means edge_xxxx</description>
                         def br = build(
                             job: &quot;q8_buildroot&quot;,
                             parameters:[
-                                booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
-                                string(name: &apos;stage&apos;, value: &quot;br&quot;),
-                                string(name: &apos;target&apos;, value: &quot;edge&quot;)
+                                booleanParam(name:&apos;cleanBeforeBuild&apos;, value:&quot;${params.cleanBr}&quot;),
+                                string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;edge&quot;)
                             ]
                         )
                     } else {
                         def br = build(
                             job: &quot;q8_buildroot&quot;,
                             parameters:[
-                                booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
-                                string(name: &apos;stage&apos;, value: &quot;br&quot;),
-                                string(name: &apos;target&apos;, value: &quot;edge&quot;),
+                                booleanParam(name:&apos;cleanBeforeBuild&apos;, value:&quot;${params.cleanBr}&quot;),
+                                string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;edge&quot;),
                                 string(name: &apos;branch&apos;, value: &quot;edge_${params.branch}&quot;)
                             ]
                         )
@@ -147,7 +149,7 @@ xxxx means edge_xxxx</description>
                         if ( params.branch==&quot;&quot; ) {
                             sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_SUBDIR}; make jenkins-edge&quot;&apos;
                         } else {
-                            sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_SUBDIR}; git checkout edge_${params.branch}; make jenkins-edge&quot;&apos;
+                            sh &quot;ssh ${SERVER} \&quot;cd ${R_SYS_SUBDIR}; git checkout edge_${params.branch}; make jenkins-edge\&quot;&quot;
                         }
                         sh &apos;scp ${SERVER}:${R_HOME}/${R_SYS_SUBDIR}/out/images/edge.img.xz ${repoRoot}&apos;
                         env.ckPoint = sh (
@@ -155,7 +157,7 @@ xxxx means edge_xxxx</description>
                             returnStdout: true
                         ).trim()
                         //I believe dir created
-                        sh &apos;echo &quot;sys ${ckPoint}&quot; &gt;&gt;${repoRoot}/commit.txt&apos;
+                        sh &quot;echo sys ${ckPoint} &gt;&gt;${repoRoot}/commit.txt&quot;
                     }
                 }
             }
