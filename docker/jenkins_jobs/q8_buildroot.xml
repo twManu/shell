@@ -97,10 +97,12 @@ full branch name must be provided
                     //determine where to save artifact
                     if ( params.branch==&quot;&quot; ) {
                         env.keepDir = &quot;${keepDirPP}/${date}/${params.target}&quot;
+                        echo &quot;master ${keepDir}&quot;
                     } else {
                         env.keepDirP = &quot;${keepDirPP}/${params.target}&quot;
                         env.keepDir = sh(returnStdout: true, script: &apos;echo ${params.branch} | cut -f2 -d \&apos;_\&apos;&apos;).trim()
                         env.keepDir = &quot;${keepDirP}/${keepDir}&quot;
+                        echo &quot;${branch} ${keepDir}&quot;
                     }
                     sh &apos;mkdir -p ${keepDir}&apos;
                     if ( params.stage==&quot;br&quot; ) {
@@ -115,13 +117,13 @@ full branch name must be provided
                                 def exists2 = fileExists &quot;${edgeKern}&quot;
                                 if (exists2) {
                                     sh &quot;cp -a ${edgeKern} ${keepDir}&quot;
-                                    sh &apos;echo &quot;${params.stage} ${ckPoint}&quot; &gt;&gt;${keepDir}/commit.txt&apos;
+                                    sh &quot;echo ${params.stage} ${ckPoint} &gt;&gt;${keepDir}/commit.txt&quot;
                                 }
                             } else { //params.target==&quot;edge&quot;, i.e q8
                                 def exists = fileExists &quot;${outDiff}&quot;
                                 if (exists) {
                                     sh &quot;cp -a ${outDiff} ${keepDir}&quot;
-                                    sh &apos;echo &quot;${params.stage} ${ckPoint}&quot; &gt;&gt;${keepDir}/commit.txt&apos;
+                                    sh &quot;echo ${params.stage} ${ckPoint} &gt;&gt;${keepDir}/commit.txt&quot;
                                 }
                             } //params.target==&quot;edge&quot;
                             
@@ -133,7 +135,7 @@ full branch name must be provided
                                 def exists = fileExists &quot;${outKern}&quot;
                                 if (exists) {
                                     sh &quot;cp -a ${outKern} ${keepDir}&quot;
-                                    sh &apos;echo &quot;${params.stage} ${ckPoint}&quot; &gt;&gt;${keepDir}/commit.txt&apos;
+                                    sh &quot;echo ${params.stage} ${ckPoint} &gt;&gt;${keepDir}/commit.txt&quot;
                                 }
                                 def br1Files = [&apos;tftp/default&apos;, &apos;tftp/acpboot.bin&apos;, &apos;tftp/ldlinux.c32&apos;]
                                 for (int i = 0; i &lt; br1Files.size(); ++i) {

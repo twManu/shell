@@ -45,10 +45,10 @@
       <command>#!/bin/bash
 DATE=`date +%Y%m%d`
 if [ -n &quot;${branch}&quot; ]; then
-	COMMIT=${JENKINS_HOME}/userContent/edge/${branch}/commit.txt
+	COMMIT=${JENKINS_HOME}/userContent/q8/${branch}/commit.txt
     git checkout edge_${branch}
 else
-	COMMIT=${JENKINS_HOME}/userContent/${DATE}/edge/commit.txt
+	COMMIT=${JENKINS_HOME}/userContent/${DATE}/q8/commit.txt
 fi
 mkdir -p `dirname ${COMMIT}`
 tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
