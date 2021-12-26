@@ -1,0 +1,29 @@
+pipeline {
+	agent any
+	stages {
+		stage('test_string') {
+			steps {
+				script {
+					def br = build (
+						job: 'test_string',
+						parameters: [
+							string(name: 'branch', value: "${params.branch}")
+						]
+					)
+				}
+			}
+		}
+		stage('test_choice') {
+			steps {
+				script {
+					def br = build (
+						job: 'test_choice',
+						parameters: [
+							string(name: 'choice', value: "aaa")
+						]
+					)
+				}
+			}
+		}
+	}
+} //pipeline

@@ -3,6 +3,7 @@
 # RUN:
 #  docker run -d --name mj --user root -p 8080:8080 -p 50000:50000 -v /var/run/docker.sock:/var/run/docker.sock manu-jenkins:0000
 # Check password: in /var/jenkins_home/secrets/initialAdminPassword
+#  docker start mj       ... if ever powered off
 #  docker exec -it mj /bin/bash
 # 00 is base
 # must have USER root to avoid apt-key or something fail
