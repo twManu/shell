@@ -1,0 +1,14 @@
+pipeline {
+	agent any
+	stages {
+		stage('stage 1') {
+			steps {
+				/*
+				   we get params.branch = "null" if project has no parameter branch
+				   otherwise if defined and empty, params.branch = ""
+				 */
+				echo "params.branch = \"${params.branch}\""
+			}
+		}
+	}
+} //pipeline

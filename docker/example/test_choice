@@ -1,0 +1,10 @@
+pipeline {
+	agent any
+	stages {
+		stage('stage 1') {
+			steps {
+				echo "params.choice = \"${params.choice}\""
+			}
+		}
+	}
+} //pipeline
