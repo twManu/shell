@@ -1,7 +1,11 @@
 pipeline {
 	agent any
+	environment {
+		date = sh(returnStdout: true, script: 'date +%Y%m%d').trim()
+	}
 	stages {
 		stage('test_string') {
+			when{ expression {params.build_test_string} }
 			steps {
 				script {
 					def br = build (
@@ -14,6 +18,7 @@ pipeline {
 			}
 		}
 		stage('test_choice') {
+			when{ expression {params.build_test_choice} }
 			steps {
 				script {
 					def br = build (
