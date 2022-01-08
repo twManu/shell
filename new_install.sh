@@ -83,6 +83,8 @@ do_bashrc()
 	#echo -n "alias lnsrc='sudo mount.cifs //10.1.9.200/Resources /mnt/src" >> ~/.bashrc
 	#echo " -o username=manuchen'" >> ~/.bashrc
 
+	#ubuntu 21.10 needs forceuid,forcegid
+	#sudo mount.cifs //62.11.20.100/share/git ~/nas -o forceuid,forcegid,uid=$(id -u),gid=$(id -g),username=manu,vers=1.0
 	echo "alias goshare='cd /media/sf_share'" >> ~/.bashrc
 }
 
