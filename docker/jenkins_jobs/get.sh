@@ -4,19 +4,22 @@
 
 tasks=(
 	"check_space"
+	"clean_yyyymm"
 	"copy_to_release"
 	"edge_be"
 	"edge_branch"
 	"edge_fe"
 	"edge_pipe"
-	"edge_sys"
-	"edge_system"
+	"edge_v20"
 	"q8_buildroot"
 	"q8_client"
 	"q8_pipe"
 	"q8_server"
 	"release_to_version"
 )
+
+#replaced by edge_pipe "edge_sys"
+#replaced by edge_pipe "edge_system"
 
 #edge_sys and edge_system deprecate
 

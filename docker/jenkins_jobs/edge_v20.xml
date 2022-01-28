@@ -9,18 +9,7 @@
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
   </actions>
-  <description>1. 每天編譯 edge 的&#xd;
-   a. 元件 (br/fe/be)&#xd;
-   b. 韌體印象檔 (usb/dom)&#xd;
-2. 由 v16 複製成 v17 時&#xd;
-   a. branch 填入 v17&#xd;
-   b. 到  edge_branch 生成 v17 (以便夜間成功找到 v17 編譯)&#xd;
-3. 由 pipe 複製成 v17 時  (#2的備案) &#xd;
-   a. br 要 clean build&#xd;
-   b. daily 時間是 0300 -&gt; 0600&#xd;
-   c. branch 填入 v17( 不要前綴 edge_ ) &#xd;
-   d. 到  edge_branch 生成 v17 (以便夜間成功找到 v17 編譯)&#xd;
-   e. 切出 branch 當天大概要手動啟動編譯</description>
+  <description>build whole edge project daily</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -48,6 +37,7 @@
           <name>branch</name>
           <description>blank for master
 xxxx means edge_xxxx</description>
+          <defaultValue>v20</defaultValue>
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
@@ -57,7 +47,7 @@ xxxx means edge_xxxx</description>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>cleanBr</name>
-          <defaultValue>false</defaultValue>
+          <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.ChoiceParameterDefinition>
           <name>image</name>
@@ -76,7 +66,7 @@ usb -&gt; out/images/edge.img</description>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
       <triggers>
         <hudson.triggers.TimerTrigger>
-          <spec>H(30-35) 3 * * *</spec>
+          <spec>H(30-35) 20 * * *</spec>
         </hudson.triggers.TimerTrigger>
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
@@ -138,7 +128,7 @@ usb -&gt; out/images/edge.img</description>
                             parameters:[
                                 booleanParam(name:&apos;cleanBeforeBuild&apos;, value:&quot;${params.cleanBr}&quot;),
                                 string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;edge&quot;),
-                                string(name: &apos;branch&apos;, value: &quot;edge_${params.branch}&quot;)
+                                string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
                             ]
                         )
                     }
@@ -206,5 +196,5 @@ usb -&gt; out/images/edge.img</description>
     <sandbox>false</sandbox>
   </definition>
   <triggers/>
-  <disabled>false</disabled>
+  <disabled>true</disabled>
 </flow-definition>

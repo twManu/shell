@@ -81,7 +81,7 @@ full branch name must be provided
                     echo &quot;HOME=${HOME}&quot;
                     sh &apos;rm -rf *; git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/buildroot&apos;
                     if ( params.branch!=&quot;&quot; ) {
-                        sh &apos;cd buildroot; git checkout ${params.branch}&apos;
+                        sh &quot;cd buildroot; git checkout edge_${params.branch}&quot;
                     }
                 }
             }
@@ -99,10 +99,8 @@ full branch name must be provided
                         env.keepDir = &quot;${keepDirPP}/${date}/${params.target}&quot;
                         echo &quot;master ${keepDir}&quot;
                     } else {
-                        env.keepDirP = &quot;${keepDirPP}/${params.target}&quot;
-                        env.keepDir = sh(returnStdout: true, script: &apos;echo ${params.branch} | cut -f2 -d \&apos;_\&apos;&apos;).trim()
-                        env.keepDir = &quot;${keepDirP}/${keepDir}&quot;
-                        echo &quot;${branch} ${keepDir}&quot;
+                        env.keepDir = &quot;${keepDirPP}/${params.target}/${params.branch}&quot;
+                        echo &quot;${params.branch} ${keepDir}&quot;
                     }
                     sh &apos;mkdir -p ${keepDir}&apos;
                     if ( params.stage==&quot;br&quot; ) {

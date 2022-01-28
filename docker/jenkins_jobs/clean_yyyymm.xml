@@ -1,0 +1,50 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>clean user content</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>YYYY</name>
+          <description>year of userContent/YYYY?? to clean</description>
+          <defaultValue>2021</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>MM</name>
+          <description>month of userContent/????MM to clean</description>
+          <defaultValue>01</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+# dirs=`ls ${JENKINS_HOME}/userContent | grep ${YYYY}${MM}`
+
+for ((i=0; i&lt;32; i++)); do
+	if [ $i -lt 10 ]; then
+    	dir=${JENKINS_HOME}/userContent/${YYYY}${MM}0${i}
+    else
+    	dir=${JENKINS_HOME}/userContent/${YYYY}${MM}${i}
+    fi
+    [ -n &quot;${dir}&quot; -a -d ${dir} ] &amp;&amp; echo ${dir} &amp;&amp; rm -rf ${dir}
+done
+</command>
+      <configuredLocalRules/>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
