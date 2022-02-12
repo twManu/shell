@@ -94,7 +94,10 @@ do_bashrc()
 #
 check_app()
 {
-	CHECKLIST="cvs git tftp mount.cifs vim ssh kaffeine vlc mplayer minicom v4l2ucp g++ codeblocks"
+	CHECKLIST="gitk cifs-utils vim ssh minicom g++ build-essential terminator gparted chromium-browser"
+	PURGE_LIST="libreoffice-* firefox"
+
+	#CHECKLIST="cvs git tftp mount.cifs vim ssh kaffeine vlc mplayer minicom v4l2ucp g++ codeblocks"
 	for app in $CHECKLIST; do
 		test ! `which $app` && echo "$app is not installed !!!"
 	done
