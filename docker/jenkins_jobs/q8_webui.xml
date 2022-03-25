@@ -1,13 +1,13 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>build q8server</description>
+  <description></description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
       <strategy class="hudson.tasks.LogRotator">
         <daysToKeep>3</daysToKeep>
-        <numToKeep>10</numToKeep>
+        <numToKeep>7</numToKeep>
         <artifactDaysToKeep>-1</artifactDaysToKeep>
         <artifactNumToKeep>-1</artifactNumToKeep>
       </strategy>
@@ -27,12 +27,13 @@ v01 means q8_v01</description>
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <url>ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/Q8server</url>
+        <url>ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/Q8webui</url>
+        <credentialsId>edge_sys</credentialsId>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/master</name>
+        <name>master</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -52,44 +53,33 @@ v01 means q8_v01</description>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>#!/bin/bash
-DATE=`date +%Y%m%d`
+      <command>DATE=`date +%Y%m%d`
 if [ -n &quot;${branch}&quot; ]; then
-    OUTDIR=${JENKINS_HOME}/userContent/q8/${branch}
+	OUTDIR=${JENKINS_HOME}/userContent/q8/${branch}
     git checkout q8_${branch}
 else
-    OUTDIR=${JENKINS_HOME}/userContent/${DATE}/q8
+	OUTDIR=${JENKINS_HOME}/userContent/${DATE}/q8
+	
 fi
 COMMIT=${OUTDIR}/commit.txt
-mkdir -p ${OUTDIR}
+mkdir -p `dirname ${COMMIT}`
 tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
-echo server ${tag} &gt;&gt; ${COMMIT}
-
-OUTFILES=&quot;server/out/q8server server/out/q8server.exe&quot;
-export GOROOT=/usr/local/go
-export PATH=${PATH}:${GOROOT}/bin
-make -C server
-make -C server exe
-for ff in ${OUTFILES}; do
-	if [ -f ${ff} ]; then
-    	cp ${ff} ${OUTDIR}
-	else
-    	echo missing ${ff} ... skip
-    fi
-done
 
 
+cd webui
+chmod 755 build.sh
+make
+if [ $? -eq 0 ]; then
+	cd q8server
+	tar cJf www.tar.xz www
+    echo q8webui ${tag} &gt;&gt; ${COMMIT}
+    cp www.tar.xz ${OUTDIR}
+fi
 </command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <hudson.tasks.Mailer plugin="mailer@1.34">
-      <recipients>manu.chen@aristaipc.com wade.chen@aristaipc.com</recipients>
-      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-      <sendToIndividuals>false</sendToIndividuals>
-    </hudson.tasks.Mailer>
-  </publishers>
+  <publishers/>
   <buildWrappers>
     <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.39">
       <deleteDirs>false</deleteDirs>
