@@ -17,7 +17,7 @@ tasks=(
 	"q8_pipe"
 	"q8_server"
 	"q8_webui"
-	"q8_v01"
+	"q8_v02"
 	"release_to_version"
 )
 
