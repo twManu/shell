@@ -12,9 +12,12 @@ tasks=(
 	"edge_pipe"
 	"edge_v20"
 	"q8_buildroot"
+	"q8_branch"
 	"q8_client"
 	"q8_pipe"
 	"q8_server"
+	"q8_webui"
+	"q8_v02"
 	"release_to_version"
 )
 

@@ -39,8 +39,9 @@ for ((i=0; i&lt;32; i++)); do
     else
     	dir=${JENKINS_HOME}/userContent/${YYYY}${MM}${i}
     fi
-    [ -n &quot;${dir}&quot; -a -d ${dir} ] &amp;&amp; echo ${dir} &amp;&amp; rm -rf ${dir}
+    [ -d ${dir} ] &amp;&amp; echo ${dir} &amp;&amp; rm -rf ${dir}
 done
+exit 0
 </command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>

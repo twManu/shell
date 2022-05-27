@@ -1,0 +1,8 @@
+# $ qiso-with-img ubuntu-20.04.2.0-desktop-amd64.iso /dev/sdf
+#
+# $1: system in iso image
+# $2: drive to system
+qiso-with-img() {
+	sudo qemu-system-x86_64 -m 2048 -enable-kvm -smp 2 -net nic -net user -boot d -cdrom $1 -drive format=raw,index=0,media=disk,file=$2;
+}
+

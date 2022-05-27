@@ -12,6 +12,15 @@
         <artifactNumToKeep>-1</artifactNumToKeep>
       </strategy>
     </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>branch</name>
+          <description>v01 means q8_v01</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@4.8.2">
     <configVersion>2</configVersion>
@@ -45,24 +54,24 @@
       <command>#!/bin/bash
 DATE=`date +%Y%m%d`
 if [ -n &quot;${branch}&quot; ]; then
-	COMMIT=${JENKINS_HOME}/userContent/q8/${branch}/commit.txt
+    OUTDIR=${JENKINS_HOME}/userContent/q8/${branch}
     git checkout q8_${branch}
 else
-	COMMIT=${JENKINS_HOME}/userContent/${DATE}/q8/commit.txt
+    OUTDIR=${JENKINS_HOME}/userContent/${DATE}/q8
 fi
+COMMIT=${OUTDIR}/commit.txt
 mkdir -p `dirname ${COMMIT}`
 tag=`git log | head -n1 | cut -f2 -d&apos; &apos;`
 echo client ${tag} &gt;&gt; ${COMMIT}
 
-OUTDIR=${JENKINS_HOME}/userContent/${DATE}
+
 OUTFILE=client/out/q8client
 export GOROOT=/usr/local/go
 export PATH=${PATH}:${GOROOT}/bin
 echo HOME=${HOME}
 make -C client q8client
 test -f ${OUTFILE} &amp;&amp; {
-	mkdir -p ${OUTDIR}/q8
-    cp ${OUTFILE} ${OUTDIR}/q8
+    cp ${OUTFILE} ${OUTDIR}
 }</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>

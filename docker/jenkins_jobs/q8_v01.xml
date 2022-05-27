@@ -9,7 +9,7 @@
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
   </actions>
-  <description>build whole q8 project daily</description>
+  <description>build whole q8 v01</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -47,8 +47,9 @@
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>branch</name>
-          <description>empty is master
-v10 is q8_v10</description>
+          <description>branch=xxx means q8_xxx
+Ex. v01 =&gt; q8_v01</description>
+          <defaultValue>v01</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -56,7 +57,7 @@ v10 is q8_v10</description>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
       <triggers>
         <hudson.triggers.TimerTrigger>
-          <spec>H(0-5) 0 * * *</spec>
+          <spec>H(30-35) 20 * * *</spec>
         </hudson.triggers.TimerTrigger>
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
@@ -64,23 +65,17 @@ v10 is q8_v10</description>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
     <script>pipeline {
     agent any
-    environment {
-        date = sh(returnStdout: true, script: &apos;date +%Y%m%d&apos;).trim()
-        usrCnt = &quot;${JENKINS_HOME}/userContent&quot;
-        SERVER = &quot;jenkins@172.17.0.1&quot;
-        R_HOME = &quot;/home/jenkins&quot;
-        R_SYS_DIR = &quot;${R_HOME}/q8/system/sys&quot;
-        commitDir= sh(
-            returnStdout: true,
-            script: &quot;if [ -z \&quot;${branch}\&quot; ]; then echo -n ${usrCnt}/${date}/q8; else echo -n ${usrCnt}/q8/${branch}; fi&quot;
-        )
-    }
     stages {
         stage(&apos;build client&apos;) {
             when{ expression {params.build_client} }
             steps {
                 script {
-                    def br = build(job: &quot;q8_client&quot;)
+                    def br = build(
+                            job: &quot;q8_client&quot;,
+                            parameters:[
+                                string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
+                            ]
+                        )
                 }
             }
         } //build client
@@ -92,7 +87,8 @@ v10 is q8_v10</description>
                         job: &quot;q8_buildroot&quot;,
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
-                            string(name: &apos;stage&apos;, value: &quot;br1&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;)
+                            string(name: &apos;stage&apos;, value: &quot;br1&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;),
+                            string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
                         ]
                     )
                 }
@@ -106,7 +102,8 @@ v10 is q8_v10</description>
                         job: &quot;q8_buildroot&quot;,
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:false),
-                            string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;)
+                            string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;),
+                            string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
                         ]
                     )
                 }
@@ -116,7 +113,12 @@ v10 is q8_v10</description>
             when{ expression {params.build_server} }
             steps {
                 script {
-                    def br = build(job: &quot;q8_server&quot;)
+                    def br = build(
+                        job: &quot;q8_server&quot;,
+                        parameters:[
+                            string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
+                        ]
+                    )
                 }
             }
         } //build server
@@ -124,34 +126,15 @@ v10 is q8_v10</description>
             when{ expression {params.build_webui} }
             steps {
                 script {
-                    def br = build(job: &quot;q8_webui&quot;)
+                    def br = build(
+                        job: &quot;q8_webui&quot;,
+                        parameters:[
+                            string(name: &apos;branch&apos;, value: &quot;${params.branch}&quot;)
+                        ]
+                    )
                 }
             }
         } //build server
-        stage(&apos;system checkout&apos;) {
-            steps {
-                script {
-                    sh &quot;ssh ${SERVER} \&quot;rm -rf q8; mkdir q8; cd q8; git clone ssh://q8vista@192.168.1.160/home/q8vista/Q8_Vista/bare/system\&quot;&quot;
-                    if ( params.branch==&quot;&quot; ) {
-                        sh &quot;ssh ${SERVER} mkdir -p ${R_SYS_DIR}/package/${date}&quot;
-                        sh &apos;scp -r ${commitDir}/* ${SERVER}:${R_SYS_DIR}/package/${date}&apos;
-                    } else {
-                        sh &quot;ssh ${SERVER} \&quot;cd ${R_SYS_DIR}; git checkout q8_${branch}; mkdir -p package/${branch}\&quot;&quot;
-                        sh &apos;scp -r ${commitDir}/* ${SERVER}:${R_SYS_DIR}/package/${branch}&apos;
-                    }
-                    sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_DIR}; VER=${branch} make build&quot;&apos;
-                    env.ckPoint = sh (
-                        script: &apos;ssh ${SERVER} &quot;cd ${R_SYS_DIR}; git log | head -n1 | cut -f2 -d \&apos; \&apos;&quot;&apos;,
-                        returnStdout: true
-                    ).trim()
-                    sh &quot;echo system ${ckPoint} &gt;&gt;${commitDir}/commit.txt&quot;
-                    sh &quot;scp ${SERVER}:${R_SYS_DIR}/out/fp/root.tar.xz ${commitDir}/root_sys.tar.xz&quot;
-                    sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_DIR}; VER=${branch} make q8vista&quot;&apos;
-                    sh &apos;ssh ${SERVER} &quot;cd ${R_SYS_DIR}; VER=${branch} make installer&quot;&apos;
-                    sh &apos;scp ${SERVER}:${R_SYS_DIR}/../Installer/Q8_Vista-*.exe ${commitDir}&apos;
-                } //script
-            } //steps
-        } //stage
     } //stages
     post() {
         always {

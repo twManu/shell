@@ -9,7 +9,7 @@
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
   </actions>
-  <description>build whole q8 project daily</description>
+  <description>build whole q8 vxx</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -47,8 +47,9 @@
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>branch</name>
-          <description>empty is master
-v10 is q8_v10</description>
+          <description>branch=xxx means q8_xxx
+Ex. v01 =&gt; q8_v01</description>
+          <defaultValue>v02</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -56,7 +57,7 @@ v10 is q8_v10</description>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
       <triggers>
         <hudson.triggers.TimerTrigger>
-          <spec>H(0-5) 0 * * *</spec>
+          <spec>H(30-35) 20 * * *</spec>
         </hudson.triggers.TimerTrigger>
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
@@ -80,7 +81,11 @@ v10 is q8_v10</description>
             when{ expression {params.build_client} }
             steps {
                 script {
-                    def br = build(job: &quot;q8_client&quot;)
+                    def br = build(job: &quot;q8_client&quot;,
+                        parameters:[
+                            string(name: &apos;branch&apos;, value: &quot;${branch}&quot;)
+                        ]
+                    )
                 }
             }
         } //build client
@@ -92,7 +97,7 @@ v10 is q8_v10</description>
                         job: &quot;q8_buildroot&quot;,
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:true),
-                            string(name: &apos;stage&apos;, value: &quot;br1&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;)
+                            string(name: &apos;stage&apos;, value: &quot;br1&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;), string(name: &apos;branch&apos;, value: &quot;${branch}&quot;)
                         ]
                     )
                 }
@@ -106,7 +111,7 @@ v10 is q8_v10</description>
                         job: &quot;q8_buildroot&quot;,
                         parameters:[
                             booleanParam(name:&apos;cleanBeforeBuild&apos;, value:false),
-                            string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;)
+                            string(name: &apos;stage&apos;, value: &quot;br&quot;), string(name: &apos;target&apos;, value: &quot;q8&quot;), string(name: &apos;branch&apos;, value: &quot;${branch}&quot;)
                         ]
                     )
                 }
@@ -116,7 +121,11 @@ v10 is q8_v10</description>
             when{ expression {params.build_server} }
             steps {
                 script {
-                    def br = build(job: &quot;q8_server&quot;)
+                    def br = build(job: &quot;q8_server&quot;,
+                        parameters:[
+                            string(name: &apos;branch&apos;, value: &quot;${branch}&quot;)
+                        ]
+                    )
                 }
             }
         } //build server
@@ -124,7 +133,11 @@ v10 is q8_v10</description>
             when{ expression {params.build_webui} }
             steps {
                 script {
-                    def br = build(job: &quot;q8_webui&quot;)
+                    def br = build(job: &quot;q8_webui&quot;,
+                        parameters:[
+                            string(name: &apos;branch&apos;, value: &quot;${branch}&quot;)
+                        ]
+                    )
                 }
             }
         } //build server
