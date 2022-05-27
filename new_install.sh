@@ -1,6 +1,23 @@
 #!/bin/bash
 # Usage: new_install manuchen
 
+MFX="g++ build-essential gstreamer1.0-libav gstreamer1.0-plugins-base gstreamer1.0-plugins-good\
+	gstreamer1.0-plugins-ugly gstreamer1.0-vaapi gstreamer1.0-plugins-bad libdrm-dev\
+       	libavutil-dev cmake libva-dev autoconf libtool libglib2.0-dev libgstreamer1.0-dev\
+	libgstreamermm-1.0-dev libudev-dev libgstreamer-plugins-*-dev intel-gpu-tools\
+       	intel-media-va-driver-non-free libxcb-dri3-dev libxcb-present-dev libxkbcommon-dev \
+	libxrandr-dev libgst-dev libmfx*"
+#https://github.com/Intel-Media-SDK/MediaSDK
+#download gmmlib-intel-gmmlib libva MediaSDK 
+
+#gstreamer-media-SDK
+#export MFX_HOME=/opt/intel/mediasdk
+#export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+#export LIBVA_DRIVER_NAME=iHD
+#export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/intel/mediasdk/lib
+#export PKG_CONFIG_PATH=/opt/intel/mediasdk/lib/pkgconfig/ 
+#export GST_PLUGIN_PATH=/usr/local/gstreamer-1.0/
+#export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libxcb-dri3.so
 #
 # in   : S1 - user name to set permision with
 #
@@ -94,7 +111,10 @@ do_bashrc()
 #
 check_app()
 {
-	CHECKLIST="cvs git tftp mount.cifs vim ssh kaffeine vlc mplayer minicom v4l2ucp g++ codeblocks"
+	CHECKLIST="gitk cifs-utils vim ssh minicom g++ build-essential terminator gparted chromium-browser"
+	PURGE_LIST="libreoffice-* firefox"
+
+	#CHECKLIST="cvs git tftp mount.cifs vim ssh kaffeine vlc mplayer minicom v4l2ucp g++ codeblocks"
 	for app in $CHECKLIST; do
 		test ! `which $app` && echo "$app is not installed !!!"
 	done
