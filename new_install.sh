@@ -2,12 +2,12 @@
 # Usage: new_install manuchen
 
 #ubuntu install mfx
-sudo apt install -y libmfx1 intel-media-va-driver-non-free libigfxcmrt7 libva-drm2 libva-x11-2 libmfx-dev libmfx-tools
-sudo apt install -y gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools
-git clone https://github.com/intel/gstreamer-media-SDK.git
-sudo apt install cmake autoconf libtool libglib2.0-dev libudev-dev libgstreamermm-1.0-dev libva-dev libdrm-dev libgst-dev libgstreamer-plugins-*-dev
-mkdir build && cd build && cmake ..
-make; make install
+#sudo apt install -y libmfx1 intel-media-va-driver-non-free libigfxcmrt7 libva-drm2 libva-x11-2 libmfx-dev libmfx-tools
+#sudo apt install -y gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools
+#git clone https://github.com/intel/gstreamer-media-SDK.git
+#sudo apt install cmake autoconf libtool libglib2.0-dev libudev-dev libgstreamermm-1.0-dev libva-dev libdrm-dev libgst-dev libgstreamer-plugins-*-dev
+#mkdir build && cd build && cmake ..
+#make; make install
 
 
 #
@@ -56,7 +56,7 @@ get_answer()
 #
 do_bashrc()
 {
-	if `grep CVSROOT ~/.bashrc`; then
+	if `grep EDITOR ~/.bashrc`; then
 		get_answer "The bashrc might be updated, continue to process ?"
 		if [ $g_ANS == 'n' ]; then
 			exit 0
@@ -66,25 +66,25 @@ do_bashrc()
 	fi
 
 	##### CVS setting #####
-	echo "export CVSROOT=:pserver:manuchen@10.1.9.200:/home/cvsroot" >> ~/.bashrc
-	echo "export EDITOR=vim" >> ~/.bashrc
+	#echo "export CVSROOT=:pserver:manuchen@10.1.9.200:/home/cvsroot" >> ~/.bashrc
+	#echo "export EDITOR=vim" >> ~/.bashrc
 
 	##### CIFS setting #####
-	echo -n "alias lnaver='sudo mount.cifs //avermedia.com/NETLOGON /mnt/aver" >> ~/.bashrc
-	echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
-	echo "\\\\a000989'" >> ~/.bashrc
+	#echo -n "alias lnaver='sudo mount.cifs //avermedia.com/NETLOGON /mnt/aver" >> ~/.bashrc
+	#echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
+	#echo "\\\\a000989'" >> ~/.bashrc
 
-	echo -n "alias lndriver='sudo mount.cifs //10.1.9.247/Driver /mnt/driver" >> ~/.bashrc
-	echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
-	echo "\\\\a000989'" >> ~/.bashrc
+	#echo -n "alias lndriver='sudo mount.cifs //10.1.9.247/Driver /mnt/driver" >> ~/.bashrc
+	#echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
+	#echo "\\\\a000989'" >> ~/.bashrc
 
 	#echo -n "alias ln618='sudo mount.cifs //10.1.9.247/b618 /mnt/618" >> ~/.bashrc
 	#echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
 	#echo "\\\\a000989'" >> ~/.bashrc
 
-	echo -n "alias lngit='sudo mount.cifs //10.1.9.247/vl/GIT /mnt/git" >> ~/.bashrc
-	echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
-	echo "\\\\a000989'" >> ~/.bashrc
+	#echo -n "alias lngit='sudo mount.cifs //10.1.9.247/vl/GIT /mnt/git" >> ~/.bashrc
+	#echo -n " -o uid=$MY_UID,username=avermedia\\" >> ~/.bashrc
+	#echo "\\\\a000989'" >> ~/.bashrc
 	
 	#echo -n "alias ln200='sudo mount.cifs //10.1.9.200/manuchen /mnt/200" >> ~/.bashrc
 	#echo " -o username=manuchen'" >> ~/.bashrc
@@ -93,8 +93,9 @@ do_bashrc()
 	#echo " -o username=manuchen'" >> ~/.bashrc
 
 	#ubuntu 21.10 needs forceuid,forcegid
-	#sudo mount.cifs //62.11.20.100/share/git ~/nas -o forceuid,forcegid,uid=$(id -u),gid=$(id -g),username=manu,vers=1.0
-	echo "alias goshare='cd /media/sf_share'" >> ~/.bashrc
+	echo "alias smbnas='sudo mount.cifs //62.11.20.100/share/git ~/nas -o forceuid,forcegid,uid=\$(id -u),gid=\$(id -g),username=manu,vers=1.0'" >> ~/.bashrc
+	echo "export EDITOR=vim" >> ~/.bashrc
+	#echo "alias goshare='cd /media/sf_share'" >> ~/.bashrc
 }
 
 
@@ -142,7 +143,7 @@ do_app_install()
 	set tabstop=4
 	set shiftwidth=4
 	set noexpandtab
-	EOF
+EOF
 }
 
 
@@ -233,6 +234,7 @@ function ssh20() {
 #NOTE:
 #1.the mount.cifs uid=<uid#>, the user name becames unavailable after 11.10
 #2.the ia32-libs fails x86 installation
+
 
 get_param $1
 do_app_install
