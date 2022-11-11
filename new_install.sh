@@ -104,7 +104,7 @@ do_bashrc()
 #
 check_app()
 {
-	CHECKLIST="gitk cifs-utils vim ssh minicom g++ build-essential terminator gparted chromium-browser"
+	CHECKLIST="gitk cifs-utils vim ssh minicom g++ build-essential terminator gparted chromium-browser fcitx-libs-dev fcitx-tools fcitx-table cmake"
 	PURGE_LIST="libreoffice-* firefox"
 
 	#CHECKLIST="cvs git tftp mount.cifs vim ssh kaffeine vlc mplayer minicom v4l2ucp g++ codeblocks"
