@@ -128,6 +128,9 @@ do_app_install()
 	#    https://github.com/Alger23/ubuntu_dayi_for_ibus
 	#    3. setup keyboard: add chinese/dayi input source
 
+	# use ssh-keygen and register id_rsa.pub to github
+	# git clone git@github.com:twManu/shell.git
+
 	#APPLIST="cvs git-core nfs-kernel-server tftpd-hpa tftp-hpa smbfs vim ssh samba \
 	#	gitk kaffeine xine-ui vlc mplayer minicom v4l2ucp g++ filezilla codeblocks \
 	#	wireshark gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev \
