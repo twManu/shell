@@ -119,11 +119,21 @@ check_app()
 #
 do_app_install()
 {
-	APPLIST="cvs git-core nfs-kernel-server tftpd-hpa tftp-hpa smbfs vim ssh samba \
-		gitk kaffeine xine-ui vlc mplayer minicom v4l2ucp g++ filezilla codeblocks \
-		wireshark gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev \
-		x11proto-core-dev libx11-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos \
-		python-markdown libxml2-utils xsltproc"
+	#front type freemono 14
+	BASE_APP="gitk vim terminator build-essential curl wget cifs-utils"
+	
+	# dayi for ubuntu
+	#    1. setup language: install chinese language and logout and login
+	#    2. follow
+	#    https://github.com/Alger23/ubuntu_dayi_for_ibus
+	#    3. setup keyboard: add chinese/dayi input source
+
+	#APPLIST="cvs git-core nfs-kernel-server tftpd-hpa tftp-hpa smbfs vim ssh samba \
+	#	gitk kaffeine xine-ui vlc mplayer minicom v4l2ucp g++ filezilla codeblocks \
+	#	wireshark gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev \
+	#	x11proto-core-dev libx11-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos \
+	#	python-markdown libxml2-utils xsltproc"
+	APPLIST=${BASEAPP}
 	test $X64_CPU = "x86_64" && APPLIST="$APPLIST ia32-libs lib32ncurses5-dev lib32z1-dev lib32readline-gplv2-dev"
 
 	if [ ! -z `which cvs` ] ; then
@@ -134,6 +144,8 @@ do_app_install()
 			return
 		fi
 	fi
+
+	#wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
 	sudo apt-get -y install $APPLIST
 	check_app
@@ -199,7 +211,7 @@ do_smb()
 	fi
 }
 
-function echoCmd() {
+echoCmd() {
 	[ -n "$1" ] && {
 		echo "$1"
 		eval "$1"
@@ -207,7 +219,7 @@ function echoCmd() {
 }
 
 #since alias takes no parameter, use function instead
-function ssh20() {
+ssh20() {
 	doDel=
 	NET=192.168.20
 	if [ $# -lt 1 ]; then
@@ -238,6 +250,6 @@ function ssh20() {
 
 get_param $1
 do_app_install
-do_mnt
+#do_mnt
 do_bashrc
-do_smb
+#do_smb
